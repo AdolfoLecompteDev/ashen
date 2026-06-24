@@ -9,7 +9,7 @@ local function start(cmd)
 end
 
 start("swww-daemon")
-start("quickshell -c ~/.config/ashen")
+start("quickshell -c ashen")
 start("swayosd-server")
 start("hypridle")
 start("wl-paste --type text --watch cliphist store")
