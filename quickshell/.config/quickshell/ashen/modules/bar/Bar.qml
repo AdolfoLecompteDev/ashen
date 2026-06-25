@@ -10,9 +10,17 @@ Scope {
     property string currentTime: ""
     property string currentDate: ""
     property string timeIcon: "󰖔"
-    property string wifiSsid: "..."
-    property string btDevice: "..."
+    property string wifiSsid: ""
+    property string btDevice: ""
     property int volume: 0
+    property int battery: 0
+    property bool charging: false
+
+    function isSystemTrayItem(id) {
+        let excluded = ["blueman", "nm-applet", "networkmanager", "bluetooth", "pulseaudio", "pipewire"]
+        let lower = id.toLowerCase()
+        return excluded.some(e => lower.includes(e))
+    }
 
     Timer {
         interval: 1000
@@ -40,11 +48,11 @@ Scope {
                 let lines = text.split("\n")
                 for (let line of lines) {
                     if (line.startsWith("yes:")) {
-                        root.wifiSsid = line.split(":")[1]
+                        root.wifiSsid = line.substring(4).trim()
                         return
                     }
                 }
-                root.wifiSsid = "off"
+                root.wifiSsid = ""
             }
         }
     }
@@ -62,8 +70,7 @@ Scope {
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
-                let name = text.trim()
-                root.btDevice = name.length > 0 ? name : "off"
+                root.btDevice = text.trim()
             }
         }
     }
@@ -87,10 +94,42 @@ Scope {
     }
 
     Timer {
-        interval: 2000
+        interval: 1000
         running: true
         repeat: true
         onTriggered: volProc.running = true
+    }
+
+    Process {
+        id: batProc
+        command: ["sh", "-c", "cat /sys/class/power_supply/BAT0/capacity"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.battery = parseInt(text.trim()) || 0
+            }
+        }
+    }
+
+    Process {
+        id: chargeProc
+        command: ["sh", "-c", "cat /sys/class/power_supply/AC0/online"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.charging = text.trim() === "1"
+            }
+        }
+    }
+
+    Timer {
+        interval: 5000
+        running: true
+        repeat: true
+        onTriggered: {
+            batProc.running = true
+            chargeProc.running = true
+        }
     }
 
     Variants {
@@ -102,14 +141,12 @@ Scope {
             anchors { top: true; left: true; right: true }
             implicitHeight: 56
             color: "transparent"
-            exclusionMode: ExclusionMode.Exclusive
 
             Item {
                 anchors.fill: parent
 
                 // ── Izquierda ──────────────────────────
-                RowLayout {
-                    id: leftSection
+                Row {
                     anchors.left: parent.left
                     anchors.leftMargin: 12
                     anchors.verticalCenter: parent.verticalCenter
@@ -117,7 +154,7 @@ Scope {
 
                     Rectangle {
                         width: 40; height: 44
-                        radius: 6
+                        radius: 10
                         color: "#1d1d24"
                         border.color: "#24242d"
                         border.width: 1
@@ -125,7 +162,7 @@ Scope {
                             anchors.centerIn: parent
                             text: "󰍉"
                             color: "#6272a4"
-                            font.pixelSize: 18
+                            font.pixelSize: 20
                             font.family: "JetBrainsMono NF"
                         }
                         MouseArea {
@@ -136,16 +173,16 @@ Scope {
 
                     Rectangle {
                         height: 44
-                        radius: 6
+                        radius: 10
                         color: "#1d1d24"
                         border.color: "#24242d"
                         border.width: 1
-                        width: wsRow.implicitWidth + 12
+                        width: wsRow.width + 12
 
                         Rectangle {
                             id: slideIndicator
                             width: 30; height: 30
-                            radius: 5
+                            radius: 8
                             color: "#6272a4"
                             y: 7
                             x: {
@@ -160,7 +197,7 @@ Scope {
                             }
                         }
 
-                        RowLayout {
+                        Row {
                             id: wsRow
                             anchors.centerIn: parent
                             spacing: 4
@@ -181,7 +218,7 @@ Scope {
 
                                     Rectangle {
                                         anchors.fill: parent
-                                        radius: 5
+                                        radius: 8
                                         color: "#6272a4"
                                         opacity: parent.hasWindows && !parent.isActive ? 0.15 : 0
                                         Behavior on opacity {
@@ -218,7 +255,7 @@ Scope {
                     anchors.centerIn: parent
                     height: 44
                     width: clockRow.implicitWidth + 40
-                    radius: 6
+                    radius: 10
                     color: "#1d1d24"
                     border.color: "#24242d"
                     border.width: 1
@@ -230,7 +267,6 @@ Scope {
 
                         Column {
                             spacing: 1
-
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: root.currentTime
@@ -250,7 +286,7 @@ Scope {
 
                         Text {
                             text: root.timeIcon
-                            font.pixelSize: 24
+                            font.pixelSize: 26
                             font.family: "JetBrainsMono NF"
                             color: {
                                 let h = new Date().getHours()
@@ -265,89 +301,35 @@ Scope {
                 }
 
                 // ── Derecha ────────────────────────────
-                RowLayout {
+                Row {
                     anchors.right: parent.right
                     anchors.rightMargin: 12
                     anchors.verticalCenter: parent.verticalCenter
+                    spacing: 6
 
+                    // Tray
                     Rectangle {
                         height: 44
-                        radius: 6
+                        radius: 10
                         color: "#1d1d24"
                         border.color: "#24242d"
                         border.width: 1
-                        width: sysRow.implicitWidth + 16
+                        width: trayRow.width + 16
+                        visible: trayRow.visibleChildren.length > 0
 
-                        RowLayout {
-                            id: sysRow
+                        Row {
+                            id: trayRow
                             anchors.centerIn: parent
-                            spacing: 10
-
-                            Text {
-                                text: "󰂚"
-                                color: "#d4d4e0"
-                                font.pixelSize: 16
-                                font.family: "JetBrainsMono NF"
-                            }
-
-                            Rectangle { width: 1; height: 22; color: "#24242d" }
-
-                            RowLayout {
-                                spacing: 4
-                                Text {
-                                    text: root.wifiSsid === "off" ? "󰤭" : "󰤨"
-                                    color: root.wifiSsid === "off" ? "#8a5a5a" : "#d4d4e0"
-                                    font.pixelSize: 16
-                                    font.family: "JetBrainsMono NF"
-                                }
-                                Text {
-                                    text: root.wifiSsid
-                                    color: "#d4d4e0"
-                                    font.pixelSize: 11
-                                    font.family: "JetBrainsMono NF"
-                                }
-                            }
-
-                            RowLayout {
-                                spacing: 4
-                                Text {
-                                    text: root.btDevice === "off" ? "󰂲" : "󰂯"
-                                    color: root.btDevice === "off" ? "#8a5a5a" : "#6272a4"
-                                    font.pixelSize: 16
-                                    font.family: "JetBrainsMono NF"
-                                }
-                                Text {
-                                    visible: root.btDevice !== "off"
-                                    text: root.btDevice
-                                    color: "#d4d4e0"
-                                    font.pixelSize: 11
-                                    font.family: "JetBrainsMono NF"
-                                }
-                            }
-
-                            RowLayout {
-                                spacing: 4
-                                Text {
-                                    text: root.volume === 0 ? "󰝟" : "󰕾"
-                                    color: "#d4d4e0"
-                                    font.pixelSize: 16
-                                    font.family: "JetBrainsMono NF"
-                                }
-                                Text {
-                                    text: root.volume + "%"
-                                    color: "#d4d4e0"
-                                    font.pixelSize: 11
-                                    font.family: "JetBrainsMono NF"
-                                }
-                            }
-
-                            Rectangle { width: 1; height: 22; color: "#24242d" }
+                            spacing: 6
 
                             Repeater {
                                 model: SystemTray.items
                                 delegate: Item {
                                     required property SystemTrayItem modelData
-                                    width: 22; height: 22
+                                    width: visible ? 22 : 0
+                                    height: 22
+                                    visible: !root.isSystemTrayItem(modelData.id)
+
                                     Image {
                                         anchors.centerIn: parent
                                         source: modelData.icon
@@ -363,6 +345,180 @@ Scope {
                                             else
                                                 modelData.provideContext(Qt.point(x, y))
                                         }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Sistema
+                    Rectangle {
+                        height: 44
+                        radius: 10
+                        color: "#1d1d24"
+                        border.color: "#24242d"
+                        border.width: 1
+                        width: sysRow.width + 16
+
+                        Row {
+                            id: sysRow
+                            anchors.centerIn: parent
+                            spacing: 4
+
+                            // Notificaciones
+                            Rectangle {
+                                width: 30; height: 30
+                                radius: 8
+                                color: Qt.rgba(0x62/255, 0x72/255, 0xa4/255, 0.15)
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "󰂚"
+                                    color: "#d4d4e0"
+                                    font.pixelSize: 16
+                                    font.family: "JetBrainsMono NF"
+                                }
+                            }
+
+                            // Wifi
+                            Rectangle {
+                                height: 30
+                                radius: 8
+                                width: wifiInner.width + 12
+                                color: root.wifiSsid !== "" ? "#6272a4" : Qt.rgba(0x62/255, 0x72/255, 0xa4/255, 0.15)
+                                Behavior on color { ColorAnimation { duration: 300 } }
+
+                                Row {
+                                    id: wifiInner
+                                    anchors.centerIn: parent
+                                    spacing: 4
+                                    Text {
+                                        text: root.wifiSsid !== "" ? "󰤨" : "󰤭"
+                                        color: root.wifiSsid !== "" ? "#0f0f12" : "#7878a0"
+                                        font.pixelSize: 16
+                                        font.family: "JetBrainsMono NF"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Behavior on color { ColorAnimation { duration: 200 } }
+                                    }
+                                    Text {
+                                        visible: root.wifiSsid !== ""
+                                        text: root.wifiSsid
+                                        color: "#0f0f12"
+                                        font.pixelSize: 11
+                                        font.family: "JetBrainsMono NF"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+                            }
+
+                            // Bluetooth
+                            Rectangle {
+                                height: 30
+                                radius: 8
+                                width: btInner.width + 12
+                                color: root.btDevice !== "" ? "#6272a4" : Qt.rgba(0x62/255, 0x72/255, 0xa4/255, 0.15)
+                                Behavior on color { ColorAnimation { duration: 300 } }
+
+                                Row {
+                                    id: btInner
+                                    anchors.centerIn: parent
+                                    spacing: 4
+                                    Text {
+                                        text: root.btDevice !== "" ? "󰂯" : "󰂲"
+                                        color: root.btDevice !== "" ? "#0f0f12" : "#7878a0"
+                                        font.pixelSize: 16
+                                        font.family: "JetBrainsMono NF"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Behavior on color { ColorAnimation { duration: 200 } }
+                                    }
+                                    Text {
+                                        visible: root.btDevice !== ""
+                                        text: root.btDevice
+                                        color: "#0f0f12"
+                                        font.pixelSize: 11
+                                        font.family: "JetBrainsMono NF"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+                            }
+
+                            // Volumen
+                            Rectangle {
+                                height: 30
+                                radius: 8
+                                width: volInner.width + 12
+                                color: Qt.rgba(0x62/255, 0x72/255, 0xa4/255, 0.15)
+
+                                Row {
+                                    id: volInner
+                                    anchors.centerIn: parent
+                                    spacing: 4
+                                    Text {
+                                        text: {
+                                            if (root.volume === 0)     return "󰝟"
+                                            else if (root.volume < 33) return "󰕿"
+                                            else if (root.volume < 66) return "󰖀"
+                                            else                        return "󰕾"
+                                        }
+                                        color: root.volume === 0 ? "#8a5a5a" : "#d4d4e0"
+                                        font.pixelSize: 16
+                                        font.family: "JetBrainsMono NF"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Behavior on color { ColorAnimation { duration: 200 } }
+                                    }
+                                    Text {
+                                        text: root.volume + "%"
+                                        color: "#d4d4e0"
+                                        font.pixelSize: 11
+                                        font.family: "JetBrainsMono NF"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+                            }
+
+                            // Bateria
+                            Rectangle {
+                                height: 30
+                                radius: 8
+                                width: batInner.width + 12
+                                color: Qt.rgba(0x62/255, 0x72/255, 0xa4/255, 0.15)
+
+                                Row {
+                                    id: batInner
+                                    anchors.centerIn: parent
+                                    spacing: 4
+                                    Text {
+                                        text: {
+                                            if (root.charging)            return "󰚥"
+                                            else if (root.battery >= 90) return "󰁹"
+                                            else if (root.battery >= 70) return "󰂁"
+                                            else if (root.battery >= 50) return "󰁿"
+                                            else if (root.battery >= 30) return "󰁽"
+                                            else if (root.battery >= 15) return "󰁻"
+                                            else                          return "󰂃"
+                                        }
+                                        color: {
+                                            if (root.charging)            return "#d4d4e0"
+                                            else if (root.battery >= 50) return "#d4d4e0"
+                                            else if (root.battery >= 20) return "#c4a882"
+                                            else                          return "#c47a7a"
+                                        }
+                                        font.pixelSize: 16
+                                        font.family: "JetBrainsMono NF"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Behavior on color { ColorAnimation { duration: 300 } }
+                                    }
+                                    Text {
+                                        text: root.battery + "%"
+                                        color: {
+                                            if (root.charging)            return "#d4d4e0"
+                                            else if (root.battery >= 50) return "#d4d4e0"
+                                            else if (root.battery >= 20) return "#c4a882"
+                                            else                          return "#c47a7a"
+                                        }
+                                        font.pixelSize: 11
+                                        font.family: "JetBrainsMono NF"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Behavior on color { ColorAnimation { duration: 300 } }
                                     }
                                 }
                             }
