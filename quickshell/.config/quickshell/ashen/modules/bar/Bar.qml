@@ -9,7 +9,7 @@ Scope {
     id: root
     property string currentTime: ""
     property string currentDate: ""
-    property string timeIcon: "󰖔"
+    property string timeIcon: ""
     property string wifiSsid: ""
     property string btDevice: ""
     property int volume: 0
@@ -31,11 +31,11 @@ Scope {
             let h = now.getHours()
             root.currentTime = Qt.formatDateTime(now, "hh:mm:ss AP")
             root.currentDate = Qt.formatDateTime(now, "ddd, MMM d")
-            if (h >= 0 && h < 5)        root.timeIcon = "󰖔"
-            else if (h >= 5 && h < 8)   root.timeIcon = "󰖜"
-            else if (h >= 8 && h < 17)  root.timeIcon = "󰖙"
-            else if (h >= 17 && h < 20) root.timeIcon = "󰖛"
-            else                         root.timeIcon = "󰖑"
+            if (h >= 0 && h < 5)        root.timeIcon = ""
+            else if (h >= 5 && h < 8)   root.timeIcon = ""
+            else if (h >= 8 && h < 17)  root.timeIcon = ""
+            else if (h >= 17 && h < 20) root.timeIcon = ""
+            else                         root.timeIcon = ""
         }
     }
 
@@ -152,7 +152,6 @@ Scope {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 6
 
-                    // Launcher
                     Rectangle {
                         width: 40; height: 44
                         radius: 10
@@ -161,10 +160,10 @@ Scope {
                         border.width: 1
                         Text {
                             anchors.centerIn: parent
-                            text: "󰍉"
+                            text: "\ue8b6"
                             color: "#6272a4"
-                            font.pixelSize: 20
-                            font.family: "JetBrainsMono NF"
+                            font.pixelSize: 22
+                            font.family: "Material Symbols Rounded"
                         }
                         MouseArea {
                             anchors.fill: parent
@@ -172,7 +171,6 @@ Scope {
                         }
                     }
 
-                    // Workspaces
                     Rectangle {
                         height: 44
                         radius: 10
@@ -288,8 +286,8 @@ Scope {
 
                         Text {
                             text: root.timeIcon
-                            font.pixelSize: 26
-                            font.family: "JetBrainsMono NF"
+                            font.pixelSize: 24
+                            font.family: "Material Symbols Rounded"
                             color: {
                                 let h = new Date().getHours()
                                 if (h >= 0 && h < 5)        return "#aab4d4"
@@ -353,7 +351,7 @@ Scope {
                         }
                     }
 
-                    // Sistema — píldora contenedora
+                    // Sistema
                     Rectangle {
                         height: 44
                         radius: 10
@@ -373,17 +371,16 @@ Scope {
                                 width: 34
                                 radius: 8
                                 color: Qt.rgba(0x62/255, 0x72/255, 0xa4/255, 0.15)
-
                                 Text {
                                     anchors.centerIn: parent
-                                    text: "󰂚"
+                                    text: ""
                                     color: "#d4d4e0"
-                                    font.pixelSize: 16
-                                    font.family: "JetBrainsMono NF"
+                                    font.pixelSize: 20
+                                    font.family: "Material Symbols Rounded"
                                 }
                             }
 
-                            // Wifi — siempre visible
+                            // Wifi
                             Rectangle {
                                 height: 34
                                 radius: 8
@@ -394,13 +391,13 @@ Scope {
                                 Row {
                                     id: wifiInner
                                     anchors.centerIn: parent
-                                    spacing: 5
+                                    spacing: 6
 
                                     Text {
-                                        text: root.wifiSsid !== "" ? "󰤨" : "󰤭"
+                                        text: root.wifiSsid !== "" ? "" : ""
                                         color: root.wifiSsid !== "" ? "#0f0f12" : "#7878a0"
-                                        font.pixelSize: 16
-                                        font.family: "JetBrainsMono NF"
+                                        font.pixelSize: 20
+                                        font.family: "Material Symbols Rounded"
                                         anchors.verticalCenter: parent.verticalCenter
                                         Behavior on color { ColorAnimation { duration: 200 } }
                                     }
@@ -415,7 +412,7 @@ Scope {
                                 }
                             }
 
-                            // Bluetooth — siempre visible
+                            // Bluetooth
                             Rectangle {
                                 height: 34
                                 radius: 8
@@ -426,13 +423,13 @@ Scope {
                                 Row {
                                     id: btInner
                                     anchors.centerIn: parent
-                                    spacing: 5
+                                    spacing: 6
 
                                     Text {
-                                        text: root.btDevice !== "" ? "󰂯" : "󰂲"
+                                        text: root.btDevice !== "" ? "" : ""
                                         color: root.btDevice !== "" ? "#0f0f12" : "#7878a0"
-                                        font.pixelSize: 16
-                                        font.family: "JetBrainsMono NF"
+                                        font.pixelSize: 20
+                                        font.family: "Material Symbols Rounded"
                                         anchors.verticalCenter: parent.verticalCenter
                                         Behavior on color { ColorAnimation { duration: 200 } }
                                     }
@@ -448,43 +445,43 @@ Scope {
                             }
 
                             // Volumen
-Rectangle {
-    height: 34
-    radius: 8
-    width: volInner.width + 16
-    color: root.volume > 0 ? "#6272a4" : Qt.rgba(0x62/255, 0x72/255, 0xa4/255, 0.15)
-    Behavior on color { ColorAnimation { duration: 300 } }
+                            Rectangle {
+                                height: 34
+                                radius: 8
+                                width: volInner.width + 16
+                                color: root.volume > 0 ? "#6272a4" : Qt.rgba(0x62/255, 0x72/255, 0xa4/255, 0.15)
+                                Behavior on color { ColorAnimation { duration: 300 } }
 
-    Row {
-        id: volInner
-        anchors.centerIn: parent
-        spacing: 8
+                                Row {
+                                    id: volInner
+                                    anchors.centerIn: parent
+                                    spacing: 6
 
-        Text {
-            text: {
-                if (root.volume === 0)     return "󰝟"
-                else if (root.volume < 33) return "󰕿"
-                else if (root.volume < 66) return "󰖀"
-                else                        return "󰕾"
-            }
-            color: root.volume > 0 ? "#0f0f12" : "#7878a0"
-            font.pixelSize: 16
-            font.family: "JetBrainsMono NF"
-            anchors.verticalCenter: parent.verticalCenter
-            Behavior on color { ColorAnimation { duration: 200 } }
-        }
-        Text {
-            text: root.volume + "%"
-            color: root.volume > 0 ? "#0f0f12" : "#7878a0"
-            font.pixelSize: 12
-            font.family: "JetBrainsMono NF"
-            anchors.verticalCenter: parent.verticalCenter
-            Behavior on color { ColorAnimation { duration: 200 } }
-        }
-    }
-}
+                                    Text {
+                                        text: {
+                                            if (root.volume === 0)     return ""
+                                            else if (root.volume < 33) return ""
+                                            else if (root.volume < 66) return ""
+                                            else                        return ""
+                                        }
+                                        color: root.volume > 0 ? "#0f0f12" : "#7878a0"
+                                        font.pixelSize: 20
+                                        font.family: "Material Symbols Rounded"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Behavior on color { ColorAnimation { duration: 200 } }
+                                    }
+                                    Text {
+                                        text: root.volume + "%"
+                                        color: root.volume > 0 ? "#0f0f12" : "#7878a0"
+                                        font.pixelSize: 12
+                                        font.family: "JetBrainsMono NF"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Behavior on color { ColorAnimation { duration: 200 } }
+                                    }
+                                }
+                            }
 
-                            // Bateria — se ilumina al cargar
+                            // Bateria
                             Rectangle {
                                 height: 34
                                 radius: 8
@@ -495,17 +492,17 @@ Rectangle {
                                 Row {
                                     id: batInner
                                     anchors.centerIn: parent
-                                    spacing: 5
+                                    spacing: 6
 
                                     Text {
                                         text: {
-                                            if (root.charging)            return "󰚥"
-                                            else if (root.battery >= 90) return "󰁹"
-                                            else if (root.battery >= 70) return "󰂁"
-                                            else if (root.battery >= 50) return "󰁿"
-                                            else if (root.battery >= 30) return "󰁽"
-                                            else if (root.battery >= 15) return "󰁻"
-                                            else                          return "󰂃"
+                                            if (root.charging)            return ""
+                                            else if (root.battery >= 90) return ""
+                                            else if (root.battery >= 70) return ""
+                                            else if (root.battery >= 50) return ""
+                                            else if (root.battery >= 30) return ""
+                                            else if (root.battery >= 15) return ""
+                                            else                          return ""
                                         }
                                         color: {
                                             if (root.charging)            return "#0f0f12"
@@ -513,8 +510,8 @@ Rectangle {
                                             else if (root.battery >= 20) return "#c4a882"
                                             else                          return "#c47a7a"
                                         }
-                                        font.pixelSize: 16
-                                        font.family: "JetBrainsMono NF"
+                                        font.pixelSize: 20
+                                        font.family: "Material Symbols Rounded"
                                         anchors.verticalCenter: parent.verticalCenter
                                         Behavior on color { ColorAnimation { duration: 300 } }
                                     }
