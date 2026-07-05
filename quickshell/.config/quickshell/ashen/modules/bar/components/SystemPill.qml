@@ -41,6 +41,16 @@ Rectangle {
             width: wifiInner.width + 16
             color: Services.Network.wifiSsid !== "" ? "#6272a4" : Qt.rgba(0x62/255, 0x72/255, 0xa4/255, 0.25)
             Behavior on color { ColorAnimation { duration: 300 } }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    Services.AppState.networkTab = "wifi"
+                    Services.AppState.networkVisible = !Services.AppState.networkVisible
+                }
+            }
+
             Row {
                 id: wifiInner
                 anchors.centerIn: parent

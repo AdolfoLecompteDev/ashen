@@ -7,4 +7,5 @@ ShellRoot {
     Bar {}
     PowerMenu {}
     Calendar {}
+    NetworkPanel {}
 }
