@@ -28,6 +28,11 @@ for i = 1, 9 do
     hl.bind(mod .. " + " .. i,           hl.dsp.focus({ workspace = i }))
     hl.bind(mod .. " + ALT + " .. i,     hl.dsp.window.move({ workspace = i }))
 end
+
+-- Workspace 10
+hl.bind(mod .. " + 0",       hl.dsp.focus({ workspace = 10 }))
+hl.bind(mod .. " + ALT + 0", hl.dsp.window.move({ workspace = 10 }))
+	
 hl.bind(mod .. " + ALT + left",  hl.dsp.window.move({ workspace = "e-1" }))
 hl.bind(mod .. " + ALT + right", hl.dsp.window.move({ workspace = "e+1" }))
 
