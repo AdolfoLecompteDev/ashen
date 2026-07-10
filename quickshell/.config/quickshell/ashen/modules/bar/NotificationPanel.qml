@@ -1,10 +1,21 @@
 import Quickshell
+import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import "root:/services" as Services
 
-PanelWindow {
+Scope {
+    id: root
+
+    IpcHandler {
+        target: "notifications"
+        function toggle() {
+            Services.AppState.notificationsVisible = !Services.AppState.notificationsVisible
+        }
+    }
+
+    PanelWindow {
     id: win
     anchors { top: true; left: true; right: true; bottom: true }
     exclusionMode: ExclusionMode.Ignore
@@ -286,4 +297,5 @@ PanelWindow {
             }
         }
     }
+}
 }

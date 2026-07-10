@@ -109,3 +109,12 @@ label selection {
     background-color: #6e6e7a;
     color: #080809;
 }
+
+/* Seleccion de texto (campos de entrada, areas de texto) */
+selection,
+entry selection,
+textview text selection,
+label selection {
+    background-color: #6e6e7a;
+    color: #080809;
+}

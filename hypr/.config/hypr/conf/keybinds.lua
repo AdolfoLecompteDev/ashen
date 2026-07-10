@@ -4,6 +4,12 @@
 
 local mod = "SUPER"
 
+-- Wallpaper, notificaciones, centro de configuracion
+hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd("qs ipc -c ashen call wallpaper show"))
+hl.bind(mod .. " + N",         hl.dsp.exec_cmd("qs ipc -c ashen call notifications toggle"))
+hl.bind(mod .. " + I",         hl.dsp.exec_cmd("qs ipc -c ashen call settings toggle"))
+
+
 -- Mover/redimensionar ventanas flotantes con el mouse (SUPER + arrastrar)
 hl.bind(mod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })

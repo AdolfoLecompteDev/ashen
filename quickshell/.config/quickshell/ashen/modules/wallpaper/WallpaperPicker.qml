@@ -31,7 +31,7 @@ Scope {
         property int currentIndex: 0
         readonly property real skew: -0.16
         readonly property real cardH: Math.min(200, height * 0.2)
-        readonly property real cardW: 220
+        readonly property real cardW: 340
         readonly property real bandHeight: cardH + 20
 
         onVisibleChanged: {
@@ -56,7 +56,7 @@ Scope {
 
         Rectangle {
             anchors.fill: parent
-            color: Qt.rgba(0, 0, 0, 0.28)
+            color: Qt.rgba(0, 0, 0, 0.0)
             MouseArea {
                 anchors.fill: parent
                 onClicked: Services.AppState.wallpaperVisible = false
@@ -80,7 +80,7 @@ Scope {
             }
             Keys.onReturnPressed: {
                 if (win.wallpapers.length > 0) {
-                    Quickshell.execDetached(["sh", "-c", "awww img \"" + win.wallpapers[win.currentIndex] + "\""])
+                    Quickshell.execDetached(["sh", "-c", "awww img \"" + win.wallpapers[win.currentIndex] + "\" --transition-type random --transition-duration 0.6 --transition-fps 60 && matugen image \"" + win.wallpapers[win.currentIndex] + "\" --mode dark"])
                     Services.AppState.wallpaperVisible = false
                 }
             }
@@ -166,7 +166,8 @@ Scope {
             id: band
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 56
             height: win.bandHeight
             clip: true
             z: 10
@@ -183,7 +184,7 @@ Scope {
                 highlightRangeMode: ListView.StrictlyEnforceRange
                 preferredHighlightBegin: width / 2 - win.cardW / 2
                 preferredHighlightEnd: width / 2 + win.cardW / 2
-                highlightMoveDuration: 320
+                highlightMoveDuration: 160
 
                 header: Item { width: view.width / 2 - win.cardW / 2 }
                 footer: Item { width: view.width / 2 - win.cardW / 2 }
@@ -207,9 +208,9 @@ Scope {
                         scale: parent.isCurrent ? 1.0 : 0.9
                         opacity: parent.isCurrent ? 1.0 : Math.max(0.3, 1.0 - Math.abs(parent.dist) * 0.22)
 
-                        Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                        Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                        Behavior on opacity { NumberAnimation { duration: 250 } }
+                        Behavior on height { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: 120 } }
 
                         transform: Matrix4x4 {
                             matrix: Qt.matrix4x4(
@@ -224,7 +225,9 @@ Scope {
                             id: img
                             anchors.fill: parent
                             source: win.wallpapers.length > index ? "file://" + win.wallpapers[index] : ""
-                            fillMode: Image.PreserveAspectCrop
+                            sourceSize.width: 480
+                           sourceSize.height: 320
+                           fillMode: Image.PreserveAspectCrop
                             smooth: true
                             asynchronous: true
                             visible: false
@@ -256,7 +259,7 @@ Scope {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 if (parent.parent.isCurrent) {
-                                    Quickshell.execDetached(["sh", "-c", "awww img \"" + win.wallpapers[win.currentIndex] + "\""])
+                                    Quickshell.execDetached(["sh", "-c", "awww img \"" + win.wallpapers[win.currentIndex] + "\" --transition-type random --transition-duration 0.6 --transition-fps 60 && matugen image \"" + win.wallpapers[win.currentIndex] + "\" --mode dark"])
                                     Services.AppState.wallpaperVisible = false
                                 } else {
                                     win.currentIndex = index

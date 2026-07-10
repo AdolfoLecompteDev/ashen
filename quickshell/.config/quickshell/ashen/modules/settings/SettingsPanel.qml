@@ -1,9 +1,20 @@
 import Quickshell
+import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 import "root:/services" as Services
 
-PanelWindow {
+Scope {
+    id: root
+
+    IpcHandler {
+        target: "settings"
+        function toggle() {
+            Services.AppState.settingsVisible = !Services.AppState.settingsVisible
+        }
+    }
+
+    PanelWindow {
     id: win
     anchors { top: true; left: true; right: true; bottom: true }
     exclusionMode: ExclusionMode.Ignore
@@ -145,4 +156,5 @@ PanelWindow {
             }
         }
     }
+}
 }
