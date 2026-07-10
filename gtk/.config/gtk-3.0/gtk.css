@@ -1,0 +1,111 @@
+/* ══════════════════════════════════════
+   Ashen Ghost -- GTK3 overrides para Nemo
+   ══════════════════════════════════════ */
+
+/* Toolbar transparente (Nemo usa GtkToolbar, no headerbar) */
+toolbar, GtkToolbar {
+    background-color: transparent;
+    background-image: none;
+    box-shadow: none;
+    border: none;
+}
+
+/* Seleccion con el acento Ghost de Ashen */
+.sidebar row:selected,
+.sidebar row:selected:focus {
+    background-color: #6e6e7a;
+    color: #080809;
+}
+
+iconview.view:selected,
+iconview.view:selected:focus,
+.view:selected,
+.view:selected:focus {
+    background-color: alpha(#6e6e7a, 0.35);
+    color: #e8e8ec;
+    border-radius: 6px;
+}
+
+/* Fondo general de ventana -- con alfa para que GTK no marque la
+   superficie como opaca (si no, Hyprland ignora blur/opacity aunque
+   la regla exista, porque GTK le dice al compositor "no hace falta
+   mezclar nada, soy 100% solido") */
+window, .background {
+    background-color: alpha(#0f0f11, 0.001);
+    color: #e8e8ec;
+}
+
+.sidebar {
+    background-color: #1c1c21;
+}
+
+/* La vista principal y el sidebar tienen su propio fondo por encima
+   del generico "window, .background" -- hay que dárselo explícito
+   a estos tambien para que la transparencia real se note */
+.view,
+iconview.view,
+iconview {
+    background-color: alpha(#0f0f11, 0.001);
+}
+
+.sidebar,
+.sidebar .view,
+placessidebar {
+    background-color: alpha(#1c1c21, 0.15);
+}
+
+/* ══════════════════════════════════════
+   Acento Ghost general (reemplaza el azul
+   default de GTK en botones/selecciones) +
+   esquinas redondeadas
+   ══════════════════════════════════════ */
+
+button {
+    border-radius: 8px;
+}
+
+dialog,
+window.dialog,
+.background.csd {
+    border-radius: 12px;
+}
+
+/* Boton de accion sugerida (ej. "Save", "Connect") */
+button.suggested-action {
+    background-color: #6e6e7a;
+    background-image: none;
+    color: #080809;
+    border-color: #6e6e7a;
+}
+button.suggested-action:hover {
+    background-color: #8a8a96;
+}
+button.suggested-action:active {
+    background-color: #5a5a64;
+}
+
+/* Selección general en listas (file chooser, etc) */
+list row:selected,
+list row:selected:focus,
+treeview:selected,
+treeview:selected:focus {
+    background-color: #6e6e7a;
+    color: #080809;
+}
+
+/* Checkbox/radio/switch activos */
+check:checked,
+radio:checked,
+switch:checked {
+    background-color: #6e6e7a;
+    border-color: #6e6e7a;
+}
+
+/* Seleccion de texto (campos de entrada, areas de texto) */
+selection,
+entry selection,
+textview text selection,
+label selection {
+    background-color: #6e6e7a;
+    color: #080809;
+}
