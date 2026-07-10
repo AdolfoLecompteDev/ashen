@@ -4,13 +4,24 @@ import QtQuick
 import "root:/modules/bar"
 import "root:/modules/lock"
 import "root:/modules/launcher"
+import "root:/modules/wallpaper"
+import "root:/modules/settings"
 
 ShellRoot {
     Bar {}
+    MediaPanel {}
+    OsdPanel {}
+    VolumePanel {}
+    BrightnessPanel {}
+    BatteryPanel {}
+    NotificationPanel {}
+    NotificationToast {}
+    SettingsPanel {}
     PowerMenu {}
     Calendar {}
     NetworkPanel {}
     BluetoothPanel {}
     LockScreen {}
     Launcher {}
+    WallpaperPicker {}
 }

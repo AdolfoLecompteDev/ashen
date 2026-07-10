@@ -61,9 +61,11 @@ PanelWindow {
         clip: true
 
         opacity: Services.AppState.bluetoothVisible ? 1.0 : 0.0
-        scale: Services.AppState.bluetoothVisible ? 1.0 : 0.92
         Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        transform: Translate {
+            x: Services.AppState.bluetoothVisible ? 0 : -24
+            Behavior on x { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+        }
 
         MouseArea { anchors.fill: parent; onClicked: {} }
 

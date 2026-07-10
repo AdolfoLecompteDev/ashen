@@ -41,7 +41,7 @@ Row {
         border.width: 1
         Text {
             anchors.centerIn: parent
-            text: ""
+            text: ""
             color: Services.Colors.ghost
             font.pixelSize: 22
             font.family: "Material Symbols Rounded"
@@ -49,6 +49,7 @@ Row {
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
+            onClicked: Services.AppState.launcherVisible = !Services.AppState.launcherVisible
         }
     }
 
@@ -121,7 +122,7 @@ Row {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         z: 10
-                        onClicked: { var id = wsId; Quickshell.execDetached(["sh", "-c", "hyprctl dispatch workspace " + id]) }
+                        onClicked: { var id = wsId; Quickshell.execDetached(["sh", "-c", "hyprctl dispatch 'hl.dsp.focus({ workspace = " + id + " })'"]) }
                     }
                 }
             }
@@ -152,7 +153,7 @@ Row {
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: Quickshell.execDetached(["sh", "-c", "hyprctl dispatch togglespecialworkspace " + root.specialName])
+            onClicked: Quickshell.execDetached(["sh", "-c", "hyprctl dispatch 'hl.dsp.workspace.toggle_special(\"" + root.specialName + "\")'"])
         }
     }
 }

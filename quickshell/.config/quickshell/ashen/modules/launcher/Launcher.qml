@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -28,10 +29,22 @@ Scope {
         color: "transparent"
         visible: Services.AppState.launcherVisible
 
+        WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
         property string searchText: ""
         property var allApps: []
         property string activeCategory: "All"
-        property var categories: ["All", "Internet", "Development", "System", "Utility", "Games", "Graphics", "Office", "Other"]
+        property var categories: [
+           { id: "All", icon: "" },
+           { id: "Internet", icon: "" },
+           { id: "Development", icon: "" },
+           { id: "System", icon: "" },
+           { id: "Utility", icon: "" },
+           { id: "Games", icon: "" },
+           { id: "Graphics", icon: "" },
+           { id: "Office", icon: "" },
+           { id: "Other", icon: "" },
+       ]
 
         property var filteredApps: {
             let apps = allApps
@@ -61,7 +74,6 @@ Scope {
         }
 
         function loadApps(files) {
-            // Lanzamos el proceso para leer todos los .desktop de una vez
             desktopReader.command = ["sh", "-c",
                 "for f in " + files.join(" ") + "; do " +
                 "echo '---'; " +
@@ -108,14 +120,19 @@ Scope {
             }
         }
 
-        // Click fuera cierra
+        Timer {
+            id: themeTimer
+            interval: 150
+            repeat: false
+            onTriggered: Services.AppState.wallpaperVisible = true
+        }
+
         MouseArea {
             anchors.fill: parent
             z: -1
             onClicked: Services.AppState.launcherVisible = false
         }
 
-        // Panel principal
         Rectangle {
             anchors.centerIn: parent
             width: 620
@@ -127,9 +144,13 @@ Scope {
             clip: true
 
             opacity: Services.AppState.launcherVisible ? 1.0 : 0.0
-            scale: Services.AppState.launcherVisible ? 1.0 : 0.94
+            scale: Services.AppState.launcherVisible ? 1.0 : 0.96
+            transform: Translate {
+                y: Services.AppState.launcherVisible ? 0 : 20
+                Behavior on y { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+            }
             Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-            Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
             MouseArea { anchors.fill: parent; onClicked: {} }
 
@@ -158,20 +179,15 @@ Scope {
                         spacing: 12
 
                         Text {
-                            text: ""
+                            text: ""
                             color: Services.Colors.ghost
                             font.pixelSize: 22
                             font.family: "Material Symbols Rounded"
                         }
 
-                        TextInput {
-                            id: searchField
+                        Item {
                             Layout.fillWidth: true
-                            color: Services.Colors.snow
-                            font.pixelSize: 16
-                            font.family: "JetBrainsMono NF"
-                            focus: Services.AppState.launcherVisible
-                            onTextChanged: win.searchText = text
+                            height: 30
 
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
@@ -179,14 +195,24 @@ Scope {
                                 color: Services.Colors.ash
                                 font.pixelSize: 16
                                 font.family: "JetBrainsMono NF"
-                                visible: parent.text.length === 0
+                                visible: searchField.text.length === 0
                             }
 
-                            Keys.onEscapePressed: Services.AppState.launcherVisible = false
-                            Keys.onReturnPressed: {
-                                if (win.filteredApps.length > 0) {
-                                    Quickshell.execDetached(["sh", "-c", win.filteredApps[0].exec])
-                                    Services.AppState.launcherVisible = false
+                            TextInput {
+                                id: searchField
+                                anchors.fill: parent
+                                color: Services.Colors.snow
+                                font.pixelSize: 16
+                                font.family: "JetBrainsMono NF"
+                                focus: Services.AppState.launcherVisible
+                                verticalAlignment: TextInput.AlignVCenter
+                                onTextChanged: win.searchText = text
+                                Keys.onEscapePressed: Services.AppState.launcherVisible = false
+                                Keys.onReturnPressed: {
+                                    if (win.filteredApps.length > 0) {
+                                        Quickshell.execDetached(["sh", "-c", win.filteredApps[0].exec])
+                                        Services.AppState.launcherVisible = false
+                                    }
                                 }
                             }
                         }
@@ -207,47 +233,39 @@ Scope {
                 }
 
                 // Categorias
-                ScrollView {
+                RowLayout {
                     width: parent.width
-                    height: 36
-                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                    ScrollBar.vertical.policy: ScrollBar.AlwaysOff
-                    clip: true
+                    spacing: 6
+                    Repeater {
+                        model: win.categories
+                        delegate: Rectangle {
+                       required property var modelData
+                       Layout.fillWidth: true
+                       height: 30
+                       radius: 8
+                       color: win.activeCategory === modelData.id ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.15)
+                       Behavior on color { ColorAnimation { duration: 150 } }
 
-                    Row {
-                        spacing: 6
-                        Repeater {
-                            model: win.categories
-                            delegate: Rectangle {
-                                required property string modelData
-                                height: 32
-                                width: catLabel.implicitWidth + 20
-                                radius: 8
-                                color: win.activeCategory === modelData ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.15)
-                                Behavior on color { ColorAnimation { duration: 150 } }
+                       Text {
+                           anchors.fill: parent
+                           horizontalAlignment: Text.AlignHCenter
+                           verticalAlignment: Text.AlignVCenter
+                           text: modelData.icon
+                           color: win.activeCategory === modelData.id ? Services.Colors.abyss : Services.Colors.mist
+                           font.pixelSize: 16
+                           font.family: "Material Symbols Rounded"
+                       }
 
-                                Text {
-                                    id: catLabel
-                                    anchors.centerIn: parent
-                                    text: modelData
-                                    color: win.activeCategory === modelData ? Services.Colors.abyss : Services.Colors.mist
-                                    font.pixelSize: 12
-                                    font.family: "JetBrainsMono NF"
-                                    font.bold: win.activeCategory === modelData
-                                    Behavior on color { ColorAnimation { duration: 150 } }
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: win.activeCategory = modelData
-                                }
-                            }
-                        }
+                       MouseArea {
+                           anchors.fill: parent
+                           cursorShape: Qt.PointingHandCursor
+                           onClicked: win.activeCategory = modelData.id
+                       }
+                   }
                     }
                 }
 
-                // Lista de apps
+                // Lista apps
                 Rectangle {
                     width: parent.width
                     height: 4 * 62
@@ -268,7 +286,6 @@ Scope {
 
                         delegate: Rectangle {
                             required property var modelData
-                            required property int index
                             width: appList.width
                             height: 60
                             radius: 8
@@ -281,7 +298,6 @@ Scope {
                                 anchors.rightMargin: 10
                                 spacing: 14
 
-                                // Icono
                                 Rectangle {
                                     width: 40; height: 40
                                     radius: 10
@@ -291,18 +307,10 @@ Scope {
                                         id: appImg
                                         anchors.fill: parent
                                         anchors.margins: 6
-                                        source: {
-                                            if (modelData.icon.startsWith("/")) return "file://" + modelData.icon
-                                            let path48 = "/usr/share/icons/Papirus-Dark/48x48/apps/" + modelData.icon + ".svg"
-                                            let path32 = "/usr/share/icons/Papirus/48x48/apps/" + modelData.icon + ".svg"
-                                            let fallback = Quickshell.iconPath(modelData.icon, 48)
-                                            return fallback !== "" ? fallback : path48
-                                        }
+                                        source: modelData.icon.startsWith("/") ? ("file://" + modelData.icon) : Quickshell.iconPath(modelData.icon, 48)
                                         fillMode: Image.PreserveAspectFit
                                         visible: status === Image.Ready
-                                        opacity: 0.7
-                                        layer.enabled: true
-                                        layer.effect: null
+                                        opacity: 0.85
                                     }
 
                                     Text {
@@ -315,7 +323,6 @@ Scope {
                                     }
                                 }
 
-                                // Info
                                 Column {
                                     Layout.fillWidth: true
                                     spacing: 3
@@ -356,27 +363,28 @@ Scope {
                     }
                 }
 
-                // Accesos rapidos
+                // Separador
                 Rectangle {
                     width: parent.width
                     height: 1
                     color: Services.Colors.ghostAlpha(0.15)
                 }
 
+                // Accesos rapidos
                 Row {
                     width: parent.width
                     spacing: 8
-                    bottomPadding: 4
 
                     Repeater {
                         model: [
-                            { icon: "", label: "Settings", cmd: "env XDG_CURRENT_DESKTOP=gnome gnome-control-center" },
-                            { icon: "", label: "Terminal", cmd: "kitty" },
-                            { icon: "",    label: "Files",    cmd: "nemo" },
+                            { icon: "", label: "Settings", action: "settings", cmd: "" },
+                            { icon: "", label: "Terminal", action: "cmd", cmd: "kitty" },
+                            { icon: "",    label: "Theme",   action: "theme", cmd: "" },
                         ]
+
                         delegate: Rectangle {
                             required property var modelData
-                            height: 38
+                            height: 40
                             width: (contentCol.width - 16) / 3
                             radius: 8
                             color: Services.Colors.ghostAlpha(0.1)
@@ -406,8 +414,17 @@ Scope {
                                 onEntered: parent.color = Services.Colors.ghostAlpha(0.2)
                                 onExited: parent.color = Services.Colors.ghostAlpha(0.1)
                                 onClicked: {
-                                    Quickshell.execDetached(["sh", "-c", modelData.cmd])
-                                    Services.AppState.launcherVisible = false
+                                    console.log("Action:", modelData.action, modelData.label)
+                                    if (modelData.action === "theme") {
+                                        Services.AppState.launcherVisible = false
+                                        themeTimer.start()
+                                    } else if (modelData.action === "settings") {
+                                        Services.AppState.launcherVisible = false
+                                        Services.AppState.settingsVisible = true
+                                    } else {
+                                        Quickshell.execDetached(["sh", "-c", modelData.cmd])
+                                        Services.AppState.launcherVisible = false
+                                    }
                                 }
                             }
                         }

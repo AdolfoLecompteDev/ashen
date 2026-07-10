@@ -21,11 +21,18 @@ Scope {
 
             Item {
                 anchors.fill: parent
+                CavaBackground {}
 
                 // ── Izquierda ──────────────────────────
                 Workspaces {
+                    id: workspaces
                     anchors.left: parent.left
                     anchors.leftMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                MediaPill {
+                    anchors.left: workspaces.right
+                    anchors.leftMargin: 8
                     anchors.verticalCenter: parent.verticalCenter
                 }
 

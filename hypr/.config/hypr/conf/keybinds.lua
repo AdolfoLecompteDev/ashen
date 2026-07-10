@@ -4,9 +4,14 @@
 
 local mod = "SUPER"
 
+-- Mover/redimensionar ventanas flotantes con el mouse (SUPER + arrastrar)
+hl.bind(mod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
+hl.bind(mod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+
+
 -- Apps
 hl.bind(mod .. " + T",     hl.dsp.exec_cmd("kitty"))
-hl.bind(mod .. " + E",     hl.dsp.exec_cmd("nemo"))
+hl.bind(mod .. " + E",     hl.dsp.exec_cmd("dolphin"))
 hl.bind(mod .. " + W",     hl.dsp.exec_cmd("brave"))
 hl.bind(mod .. " + C",     hl.dsp.exec_cmd("codium"))
 hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd("qs ipc -c ashen call launcher toggle"), { release = true })
@@ -46,8 +51,8 @@ hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd("grimblast copy area"))
 hl.bind(mod .. " + L",         hl.dsp.exec_cmd("qs ipc -c ashen call lockscreen lock"))
 
 -- Audio y brillo
-hl.bind("XF86AudioRaiseVolume",  hl.dsp.exec_cmd("swayosd-client --output-volume raise"),  { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume",  hl.dsp.exec_cmd("swayosd-client --output-volume lower"),  { locked = true, repeating = true })
-hl.bind("XF86AudioMute",         hl.dsp.exec_cmd("swayosd-client --output-volume mute-toggle"), { locked = true })
-hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("swayosd-client --brightness raise"),     { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("swayosd-client --brightness lower"),     { locked = true, repeating = true })
+hl.bind("XF86AudioRaiseVolume",  hl.dsp.exec_cmd("sh -c 'wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ -l 1.0 && qs ipc -c ashen call osd volume'"),  { locked = true, repeating = true })
+hl.bind("XF86AudioLowerVolume",  hl.dsp.exec_cmd("sh -c 'wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && qs ipc -c ashen call osd volume'"),  { locked = true, repeating = true })
+hl.bind("XF86AudioMute",         hl.dsp.exec_cmd("sh -c 'wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && qs ipc -c ashen call osd volume'"), { locked = true })
+hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("sh -c 'brightnessctl set 5%+ && qs ipc -c ashen call osd brightness'"),     { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("sh -c 'brightnessctl set 5%- && qs ipc -c ashen call osd brightness'"),     { locked = true, repeating = true })

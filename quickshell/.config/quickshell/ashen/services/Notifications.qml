@@ -1,0 +1,199 @@
+pragma Singleton
+import Quickshell
+import Quickshell.Io
+import Quickshell.Services.Notifications
+import QtQuick
+
+Singleton {
+    id: root
+
+    readonly property string historyPath: "/home/adolf-arch/.local/state/ashen/notifications.json"
+
+    property var history: []
+    property var activePopups: []
+
+    function pushPopup(entry) {
+        let popupEntry = Object.assign({}, entry)
+        root.activePopups = [popupEntry].concat(root.activePopups)
+    }
+
+    function dismissPopup(id) {
+        root.activePopups = root.activePopups.filter(p => p.id !== id)
+    }
+
+    property bool lastCapsLock: false
+    property bool lastNumLock: false
+    property string lastPowerProfile: ""
+    property bool initialized: false
+
+    function addEntry(entry) {
+        entry.id = Date.now() + "-" + Math.floor(Math.random() * 100000)
+        entry.timestamp = Date.now()
+        root.history = [entry].concat(root.history).slice(0, 300)
+        root.pushPopup(entry)
+        saveHistory()
+    }
+
+    function addSystemToast(message, glyph, isLetter, typeKey) {
+        // Las del sistema solo se muestran como toast, no se guardan en el historial.
+        // Reemplaza cualquier otra activa del mismo "tipo" (typeKey) en vez de apilarse.
+        root.activePopups = root.activePopups.filter(p => !(p.source === "system" && p.typeKey === typeKey))
+        let entry = {
+            appName: "System",
+            summary: "SYSTEM ALERT",
+            body: message,
+            glyph: glyph || "",
+            glyphIsLetter: isLetter || false,
+            typeKey: typeKey || message,
+            icon: "",
+            urgency: 0,
+            source: "system",
+            id: Date.now() + "-" + Math.floor(Math.random() * 100000),
+            timestamp: Date.now()
+        }
+        root.pushPopup(entry)
+    }
+
+    function removeAt(index) {
+        let arr = root.history.slice()
+        arr.splice(index, 1)
+        root.history = arr
+        saveHistory()
+    }
+
+    function clearAll() {
+        root.history = []
+        saveHistory()
+    }
+
+    function saveHistory() {
+        let json = JSON.stringify(root.history)
+        let b64 = Qt.btoa(json)
+        saveProc.command = ["sh", "-c", "mkdir -p /home/adolf-arch/.local/state/ashen && echo '" + b64 + "' | base64 -d > " + root.historyPath]
+        saveProc.running = true
+    }
+
+    Component.onCompleted: loadProc.running = true
+
+    Process {
+        id: loadProc
+        command: ["sh", "-c", "cat " + root.historyPath + " 2>/dev/null || echo '[]'"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    let parsed = JSON.parse(text.trim() || "[]")
+                    root.history = Array.isArray(parsed) ? parsed : []
+                } catch (e) {
+                    root.history = []
+                }
+                root.initialized = true
+            }
+        }
+    }
+
+    Process {
+        id: saveProc
+        running: false
+    }
+
+    // --- Servidor D-Bus real de notificaciones (org.freedesktop.Notifications) ---
+    NotificationServer {
+        id: notifServer
+        bodySupported: true
+        imageSupported: true
+        actionsSupported: false
+        keepOnReload: true
+
+        onNotification: notification => {
+            notification.tracked = true
+            root.addEntry({
+                appName: notification.appName || "Unknown",
+                summary: notification.summary || "",
+                body: notification.body || "",
+                icon: notification.appIcon || "",
+                urgency: notification.urgency,
+                source: "app"
+            })
+        }
+    }
+
+    // --- Caps Lock / Num Lock (poll via hyprctl -j devices) ---
+    Process {
+        id: kbStateProc
+        command: ["sh", "-c", "hyprctl -j devices"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    let data = JSON.parse(text)
+                    let kb = data.keyboards && data.keyboards.find(k => k.main) || (data.keyboards ? data.keyboards[0] : null)
+                    if (!kb) return
+                    if (root.initialized) {
+                        if (kb.capsLock !== root.lastCapsLock) {
+                            root.addSystemToast(kb.capsLock ? "CAPS LOCK ON" : "CAPS LOCK OFF", "A", true, "capslock")
+                        }
+                        if (kb.numLock !== root.lastNumLock) {
+                            root.addSystemToast(kb.numLock ? "NUM LOCK ON" : "NUM LOCK OFF", "1", true, "numlock")
+                        }
+                    }
+                    root.lastCapsLock = kb.capsLock
+                    root.lastNumLock = kb.numLock
+                } catch (e) {}
+            }
+        }
+    }
+
+    Timer {
+        interval: 500
+        running: true
+        repeat: true
+        onTriggered: kbStateProc.running = true
+    }
+
+    // --- Cambios de perfil de energia (powerprofilesctl monitor, streaming) ---
+    // --- Cargador conectado/desconectado ---
+    property bool lastCharging: false
+    Process {
+        id: chargerProc
+        command: ["sh", "-c", "cat /sys/class/power_supply/AC0/online 2>/dev/null || cat /sys/class/power_supply/ADP1/online 2>/dev/null || echo ''"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let val = text.trim()
+                if (val === "") return
+                let charging = val === "1"
+                if (root.initialized && charging !== root.lastCharging) {
+                    root.addSystemToast(charging ? "CHARGER CONNECTED" : "CHARGER DISCONNECTED", charging ? "" : "", false, "charger")
+                }
+                root.lastCharging = charging
+            }
+        }
+    }
+    Timer {
+        interval: 2000
+        running: true
+        repeat: true
+        onTriggered: chargerProc.running = true
+    }
+
+    Process {
+        id: profileMonitor
+        command: ["sh", "-c", "powerprofilesctl monitor"]
+        running: true
+        stdout: SplitParser {
+            onRead: data => {
+                let line = data.trim()
+                if (line.length === 0) return
+                if (root.initialized && root.lastPowerProfile !== "" && line !== root.lastPowerProfile) {
+                    let profIcon = line.indexOf("saver") !== -1 ? ""
+                        : line.indexOf("performance") !== -1 ? ""
+                        : ""
+                    root.addSystemToast("PROFILE: " + line.toUpperCase(), profIcon, false, "powerprofile")
+                }
+                root.lastPowerProfile = line
+            }
+        }
+        onRunningChanged: if (!running) running = true
+    }
+}

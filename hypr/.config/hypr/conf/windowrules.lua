@@ -14,6 +14,7 @@ hl.window_rule({ match = { class = "pavucontrol"     }, float = true })
 
 -- Opacity
 hl.window_rule({ match = { class = "kitty"   }, opacity = "0.90 override 0.85 override" })
+hl.window_rule({ match = { class = "org.kde.dolphin" }, opacity = "0.82 override 0.75 override" })
 hl.window_rule({ match = { class = "nemo" }, opacity = "0.88 override 0.85 override" })
 hl.window_rule({ match = { class = "codium"  }, opacity = "0.95 override 0.90 override" })
 

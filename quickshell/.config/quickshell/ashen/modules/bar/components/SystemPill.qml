@@ -24,16 +24,22 @@ Rectangle {
         Rectangle {
             width: root.innerH; height: root.innerH
             radius: root.innerR
-            color: Services.Colors.ghostAlpha(0.2)
+            color: Services.AppState.notificationsVisible ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.2)
+            Behavior on color { ColorAnimation { duration: 300 } }
             Text {
                 anchors.centerIn: parent
                 text: ""
-                color: Services.Colors.mist
+                color: Services.AppState.notificationsVisible ? Services.Colors.abyss : Services.Colors.mist
                 font.pixelSize: 18
                 font.family: "Material Symbols Rounded"
+                Behavior on color { ColorAnimation { duration: 200 } }
+            }
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: Services.AppState.notificationsVisible = !Services.AppState.notificationsVisible
             }
         }
-
         // Wifi
         Rectangle {
             height: root.innerH
@@ -118,6 +124,18 @@ Rectangle {
             width: volInner.width + 16
             color: Services.Audio.volume > 0 ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.2)
             Behavior on color { ColorAnimation { duration: 300 } }
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: Services.AppState.volumeVisible = !Services.AppState.volumeVisible
+            }
+            Timer {
+                interval: 400; running: true; repeat: true; triggeredOnStart: true
+                onTriggered: {
+                    let g = parent.mapToGlobal(0, 0)
+                    Services.AppState.volumePillCenterX = g.x + parent.width / 2
+                }
+            }
             Row {
                 id: volInner
                 anchors.centerIn: parent
@@ -140,6 +158,47 @@ Rectangle {
                 }
             }
         }
+        // Brillo
+        Rectangle {
+            height: root.innerH
+            radius: root.innerR
+            width: brightInner.width + 16
+            color: Services.Brightness.level > 0 ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.2)
+            Behavior on color { ColorAnimation { duration: 300 } }
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: Services.AppState.brightnessVisible = !Services.AppState.brightnessVisible
+            }
+            Timer {
+                interval: 400; running: true; repeat: true; triggeredOnStart: true
+                onTriggered: {
+                    let g = parent.mapToGlobal(0, 0)
+                    Services.AppState.brightnessPillCenterX = g.x + parent.width / 2
+                }
+            }
+            Row {
+                id: brightInner
+                anchors.centerIn: parent
+                spacing: 5
+                Text {
+                    text: ""
+                    color: Services.Brightness.level > 0 ? Services.Colors.abyss : Services.Colors.ash
+                    font.pixelSize: 18
+                    font.family: "Material Symbols Rounded"
+                    anchors.verticalCenter: parent.verticalCenter
+                    Behavior on color { ColorAnimation { duration: 200 } }
+                }
+                Text {
+                    text: Services.Brightness.level + "%"
+                    color: Services.Brightness.level > 0 ? Services.Colors.abyss : Services.Colors.ash
+                    font.pixelSize: 12
+                    font.family: "JetBrainsMono NF"
+                    anchors.verticalCenter: parent.verticalCenter
+                    Behavior on color { ColorAnimation { duration: 200 } }
+                }
+            }
+        }
 
         // Bateria
         Rectangle {
@@ -148,6 +207,18 @@ Rectangle {
             width: batInner.width + 16
             color: Services.Battery.charging ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.2)
             Behavior on color { ColorAnimation { duration: 300 } }
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: Services.AppState.batteryVisible = !Services.AppState.batteryVisible
+            }
+            Timer {
+                interval: 400; running: true; repeat: true; triggeredOnStart: true
+                onTriggered: {
+                    let g = parent.mapToGlobal(0, 0)
+                    Services.AppState.batteryPillCenterX = g.x + parent.width / 2
+                }
+            }
             Row {
                 id: batInner
                 anchors.centerIn: parent

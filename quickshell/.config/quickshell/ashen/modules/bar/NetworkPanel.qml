@@ -109,9 +109,11 @@ PanelWindow {
         visible: !root.showConnectDialog
 
         opacity: Services.AppState.networkVisible && !root.showConnectDialog ? 1.0 : 0.0
-        scale: Services.AppState.networkVisible ? 1.0 : 0.92
         Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        transform: Translate {
+            x: Services.AppState.networkVisible ? 0 : -24
+            Behavior on x { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+        }
 
         MouseArea { anchors.fill: parent; onClicked: {} }
 
@@ -512,9 +514,11 @@ PanelWindow {
         visible: root.showConnectDialog
 
         opacity: root.showConnectDialog ? 1.0 : 0.0
-        scale: root.showConnectDialog ? 1.0 : 0.92
         Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        transform: Translate {
+            x: root.showConnectDialog ? 0 : -24
+            Behavior on x { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+        }
 
         MouseArea { anchors.fill: parent; onClicked: {} }
 

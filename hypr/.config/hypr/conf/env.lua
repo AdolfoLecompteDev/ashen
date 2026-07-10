@@ -9,10 +9,10 @@ hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 
 -- GTK
 hl.env("GDK_BACKEND", "wayland,x11")
-hl.env("GTK_THEME", "Adwaita:dark")
 
 -- Qt
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
+hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
 hl.env("QT_AUTO_SCREEN_SCALE_FACTOR", "1")
 hl.env("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
 
