@@ -58,6 +58,8 @@ Singleton {
     property bool calendarVisible: false
     property bool networkVisible: false
     property bool bluetoothVisible: false
+    property bool usbVisible: false
+    property real usbPillCenterX: 500
     property bool launcherVisible: false
     property bool wallpaperVisible: false
     property string networkTab: "wifi"

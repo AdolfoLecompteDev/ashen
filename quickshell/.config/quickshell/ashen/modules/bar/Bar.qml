@@ -37,6 +37,11 @@ Scope {
                 }
 
                 // ── Centro ─────────────────────────────
+                USBPill {
+                    anchors.right: clock.left
+                    anchors.rightMargin: 10
+                    anchors.verticalCenter: parent.verticalCenter
+                }
                 Clock {
                     id: clock
                     anchors.centerIn: parent

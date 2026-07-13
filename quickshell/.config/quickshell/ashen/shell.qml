@@ -24,6 +24,7 @@ ShellRoot {
     Calendar {}
     NetworkPanel {}
     BluetoothPanel {}
+    USBPanel {}
     LockScreen {}
     Launcher {}
     WallpaperPicker {}
