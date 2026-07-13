@@ -23,11 +23,11 @@ Item {
     property string currentFont: "JetBrainsMono NF"
 
     property var schemes: {
-        "classic": { abyss: "#080809", void_: "#0f0f11", crypt: "#16161a", surface: "#1c1c21", raised: "#242428", elevated: "#2e2e34", snow: "#e8e8ec", mist: "#9090a0", ash: "#4a4a54", ghost: "#6e6e7a", shade: "#4e4e5a", error_: "#c87a7a", neutral: "#8a8a96" },
-        "cyberpunk": { abyss: "#0d0221", void_: "#150829", crypt: "#1a0b2e", surface: "#241b3d", raised: "#2d2347", elevated: "#3a2d5c", snow: "#f0f0ff", mist: "#b8a9d9", ash: "#5e4b8b", ghost: "#ff2e97", shade: "#cc1f7a", error_: "#ff3860", neutral: "#00fff2" },
-        "tokyonight": { abyss: "#16161e", void_: "#1a1b26", crypt: "#1f2335", surface: "#24283b", raised: "#292e42", elevated: "#364a82", snow: "#c0caf5", mist: "#a9b1d6", ash: "#565f89", ghost: "#7aa2f7", shade: "#3d59a1", error_: "#f7768e", neutral: "#bb9af7" },
-        "dracula": { abyss: "#21222c", void_: "#282a36", crypt: "#2d2f3f", surface: "#343746", raised: "#44475a", elevated: "#4d5066", snow: "#f8f8f2", mist: "#9ba0c4", ash: "#6272a4", ghost: "#bd93f9", shade: "#9580c9", error_: "#ff5555", neutral: "#ff79c6" },
-        "nord": { abyss: "#2e3440", void_: "#3b4252", crypt: "#434c5e", surface: "#434c5e", raised: "#4c566a", elevated: "#4c566a", snow: "#eceff4", mist: "#d8dee9", ash: "#4c566a", ghost: "#88c0d0", shade: "#5e81ac", error_: "#bf616a", neutral: "#b48ead" },
+        "classic": { abyss: "#080809", void_: "#0f0f11", crypt: "#16161a", surface: "#1c1c21", raised: "#242428", elevated: "#2e2e34", snow: "#e8e8ec", mist: "#9090a0", ash: "#4a4a54", ghost: "#6e6e7a", shade: "#4e4e5a", error_: "#c87a7a", neutral: "#8a8a96", papirusColor: "grey" },
+        "cyberpunk": { abyss: "#0d0221", void_: "#150829", crypt: "#1a0b2e", surface: "#241b3d", raised: "#2d2347", elevated: "#3a2d5c", snow: "#f0f0ff", mist: "#b8a9d9", ash: "#5e4b8b", ghost: "#ff2e97", shade: "#cc1f7a", error_: "#ff3860", neutral: "#00fff2", papirusColor: "magenta" },
+        "tokyonight": { abyss: "#16161e", void_: "#1a1b26", crypt: "#1f2335", surface: "#24283b", raised: "#292e42", elevated: "#364a82", snow: "#c0caf5", mist: "#a9b1d6", ash: "#565f89", ghost: "#7aa2f7", shade: "#3d59a1", error_: "#f7768e", neutral: "#bb9af7", papirusColor: "blue" },
+        "dracula": { abyss: "#21222c", void_: "#282a36", crypt: "#2d2f3f", surface: "#343746", raised: "#44475a", elevated: "#4d5066", snow: "#f8f8f2", mist: "#9ba0c4", ash: "#6272a4", ghost: "#bd93f9", shade: "#9580c9", error_: "#ff5555", neutral: "#ff79c6", papirusColor: "violet" },
+        "nord": { abyss: "#2e3440", void_: "#3b4252", crypt: "#434c5e", surface: "#434c5e", raised: "#4c566a", elevated: "#4c566a", snow: "#eceff4", mist: "#d8dee9", ash: "#4c566a", ghost: "#88c0d0", shade: "#5e81ac", error_: "#bf616a", neutral: "#b48ead", papirusColor: "cyan" },
     }
 
     Component.onCompleted: fontCheckProc.running = true
@@ -57,33 +57,119 @@ Item {
     function applyScheme(schemeId) {
         let c = tab.schemes[schemeId]
         if (!c) return
-        let qml = 'pragma Singleton\nimport Quickshell\nimport QtQuick\nSingleton {\n' +
-            '    id: root\n' +
-            '    readonly property color abyss:   "' + c.abyss + '"\n' +
-            '    readonly property color void_:   "' + c.void_ + '"\n' +
-            '    readonly property color crypt:   "' + c.crypt + '"\n' +
-            '    readonly property color surface:  "' + c.surface + '"\n' +
-            '    readonly property color raised:   "' + c.raised + '"\n' +
-            '    readonly property color elevated: "' + c.elevated + '"\n' +
-            '    readonly property color snow:     "' + c.snow + '"\n' +
-            '    readonly property color mist:     "' + c.mist + '"\n' +
-            '    readonly property color ash:      "' + c.ash + '"\n' +
-            '    readonly property color ghost:    "' + c.ghost + '"\n' +
-            '    readonly property color shade:    "' + c.shade + '"\n' +
-            '    readonly property color error_:   "' + c.error_ + '"\n' +
-            '    readonly property color neutral:  "' + c.neutral + '"\n' +
-            '    function ghostAlpha(a) { return Qt.rgba(ghost.r, ghost.g, ghost.b, a) }\n' +
-            '    function surfaceAlpha(a) { return Qt.rgba(surface.r, surface.g, surface.b, a) }\n' +
-            '    function snowAlpha(a) { return Qt.rgba(snow.r, snow.g, snow.b, a) }\n' +
-            '}\n'
-        let b64 = Qt.btoa(qml)
+        let json = JSON.stringify({
+            abyss: c.abyss, void_: c.void_, crypt: c.crypt, surface: c.surface,
+            raised: c.raised, elevated: c.elevated, snow: c.snow, mist: c.mist,
+            ash: c.ash, ghost: c.ghost, shade: c.shade, error_: c.error_, neutral: c.neutral
+        })
+        let b64 = Qt.btoa(json)
         let borderHex = c.ghost.replace("#", "") + "ff"
         Quickshell.execDetached(["sh", "-c",
-            "echo '" + b64 + "' | base64 -d > /home/adolf-arch/ashen/quickshell/.config/quickshell/ashen/services/Colors.qml && " +
+            "echo '" + b64 + "' | base64 -d > /home/adolf-arch/.cache/ashen_scheme.json && " +
             "echo '" + schemeId + "' > /home/adolf-arch/.cache/ashen_scheme_mode.txt && " +
             "hyprctl eval \"hl.config({ general = { col = { active_border = { colors = {'rgba(" + borderHex + ")'} } } } })\" && " +
-            "sed -i 's/active_border = { colors = {\"rgba([^)]*)\"} }/active_border = { colors = {\"rgba(" + borderHex + ")\"} }/' /home/adolf-arch/ashen/hypr/.config/hypr/conf/general.lua && " +
-            "pkill -9 quickshell; sleep 0.3; quickshell -c ashen &"
+            "sed -i 's/active_border = { colors = {\"rgba([^)]*)\"} }/active_border = { colors = {\"rgba(" + borderHex + ")\"} }/' /home/adolf-arch/ashen/hypr/.config/hypr/conf/general.lua"
+        ])
+        tab.applyGtkTheme(c)
+    }
+
+    function applyGtkTheme(c) {
+        let css = '/* ══════════════════════════════════════\n' +
+            '   Ashen Ghost -- GTK3 overrides for Nemo\n' +
+            '   ══════════════════════════════════════ */\n' +
+            'toolbar, GtkToolbar {\n' +
+            '    background-color: transparent;\n' +
+            '    background-image: none;\n' +
+            '    box-shadow: none;\n' +
+            '    border: none;\n' +
+            '}\n' +
+            '.sidebar row:selected,\n' +
+            '.sidebar row:selected:focus {\n' +
+            '    background-color: ' + c.ghost + ';\n' +
+            '    color: ' + c.abyss + ';\n' +
+            '}\n' +
+            'iconview.view:selected,\n' +
+            'iconview.view:selected:focus,\n' +
+            '.view:selected,\n' +
+            '.view:selected:focus {\n' +
+            '    background-color: alpha(' + c.ghost + ', 0.35);\n' +
+            '    color: ' + c.snow + ';\n' +
+            '    border-radius: 6px;\n' +
+            '}\n' +
+            'window, .background {\n' +
+            '    background-color: alpha(' + c.void_ + ', 0.001);\n' +
+            '    color: ' + c.snow + ';\n' +
+            '}\n' +
+            '.sidebar {\n' +
+            '    background-color: ' + c.surface + ';\n' +
+            '}\n' +
+            '.view,\n' +
+            'iconview.view,\n' +
+            'iconview {\n' +
+            '    background-color: alpha(' + c.void_ + ', 0.001);\n' +
+            '}\n' +
+            '.sidebar,\n' +
+            '.sidebar .view,\n' +
+            'placessidebar {\n' +
+            '    background-color: alpha(' + c.surface + ', 0.15);\n' +
+            '}\n' +
+            'button {\n' +
+            '    border-radius: 8px;\n' +
+            '}\n' +
+            'dialog,\n' +
+            'window.dialog,\n' +
+            '.background.csd {\n' +
+            '    border-radius: 12px;\n' +
+            '}\n' +
+            'button.suggested-action {\n' +
+            '    background-color: ' + c.ghost + ';\n' +
+            '    background-image: none;\n' +
+            '    color: ' + c.abyss + ';\n' +
+            '    border-color: ' + c.ghost + ';\n' +
+            '}\n' +
+            'button.suggested-action:hover {\n' +
+            '    background-color: ' + c.neutral + ';\n' +
+            '}\n' +
+            'button.suggested-action:active {\n' +
+            '    background-color: ' + c.shade + ';\n' +
+            '}\n' +
+            'list row:selected,\n' +
+            'list row:selected:focus,\n' +
+            'treeview:selected,\n' +
+            'treeview:selected:focus {\n' +
+            '    background-color: ' + c.ghost + ';\n' +
+            '    color: ' + c.abyss + ';\n' +
+            '}\n' +
+            'check:checked,\n' +
+            'radio:checked,\n' +
+            'switch:checked {\n' +
+            '    background-color: ' + c.ghost + ';\n' +
+            '    border-color: ' + c.ghost + ';\n' +
+            '}\n' +
+            'selection,\n' +
+            'entry selection,\n' +
+            'textview text selection,\n' +
+            'label selection {\n' +
+            '    background-color: ' + c.ghost + ';\n' +
+            '    color: ' + c.abyss + ';\n' +
+            '}\n' +
+            '.floating-bar {\n' +
+            '    background-color: alpha(' + c.surface + ', 0.92);\n' +
+            '    color: ' + c.snow + ';\n' +
+            '    border: 1px solid alpha(' + c.ghost + ', 0.3);\n' +
+            '    border-radius: 10px;\n' +
+            '    padding: 4px 10px;\n' +
+            '    box-shadow: none;\n' +
+            '}\n' +
+            '.floating-bar:backdrop {\n' +
+            '    background-color: alpha(' + c.surface + ', 0.75);\n' +
+            '}\n'
+        let b64 = Qt.btoa(css)
+        let papirusCmd = c.papirusColor ? ("papirus-folders -C " + c.papirusColor + " 2>/dev/null; ") : ""
+        Quickshell.execDetached(["sh", "-c",
+            "mkdir -p /home/adolf-arch/.config/gtk-3.0 && " +
+            "echo '" + b64 + "' | base64 -d > /home/adolf-arch/.config/gtk-3.0/gtk.css && " +
+            papirusCmd
         ])
     }
 

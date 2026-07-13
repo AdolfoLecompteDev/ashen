@@ -1,0 +1,15 @@
+{
+  "abyss": "{{colors.surface_container_lowest.default.hex}}",
+  "void_": "{{colors.background.default.hex}}",
+  "crypt": "{{colors.surface_container_low.default.hex}}",
+  "surface": "{{colors.surface_container.default.hex}}",
+  "raised": "{{colors.surface_container_high.default.hex}}",
+  "elevated": "{{colors.surface_container_highest.default.hex}}",
+  "snow": "{{colors.on_surface.default.hex}}",
+  "mist": "{{colors.on_surface_variant.default.hex}}",
+  "ash": "{{colors.outline.default.hex}}",
+  "ghost": "{{colors.primary.default.hex}}",
+  "shade": "{{colors.secondary.default.hex}}",
+  "error_": "{{colors.error.default.hex}}",
+  "neutral": "{{colors.tertiary.default.hex}}"
+}

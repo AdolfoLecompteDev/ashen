@@ -4,9 +4,8 @@ scheme_type = "scheme-tonal-spot"
 command = "true"
 set = false
 [templates.ashen_colors]
-input_path = "~/.config/matugen/templates/Colors.qml.template"
-output_path = "/home/adolf-arch/ashen/quickshell/.config/quickshell/ashen/services/Colors.qml"
-post_hook = "pkill -9 quickshell; sleep 0.3; quickshell -c ashen &"
+input_path = "~/.config/matugen/templates/scheme.json.template"
+output_path = "/home/adolf-arch/.cache/ashen_scheme.json"
 [templates.hypr_border]
 input_path = "~/.config/matugen/templates/border_color.template"
 output_path = "/home/adolf-arch/.cache/matugen_border_color.txt"
