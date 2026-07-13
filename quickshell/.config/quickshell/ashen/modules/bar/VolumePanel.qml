@@ -29,7 +29,6 @@ PanelWindow {
         width: 280
         height: 100
         x: Math.max(12, Math.min(parent.width - width - 12, Services.AppState.volumePillCenterX - width / 2))
-        Behavior on x { NumberAnimation { duration: 150 } }
         radius: 14
         color: Services.Colors.surfaceAlpha(0.95)
         border.color: Services.Colors.ghostAlpha(0.2)

@@ -84,7 +84,6 @@ PanelWindow {
         width: 440
         height: 230
         x: Math.max(12, Math.min(parent.width - width - 12, Services.AppState.batteryPillCenterX - width / 2))
-        Behavior on x { NumberAnimation { duration: 150 } }
         radius: 18
         color: Services.Colors.surfaceAlpha(0.95)
         border.color: Services.Colors.ghostAlpha(0.2)
