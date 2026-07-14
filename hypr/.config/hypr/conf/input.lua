@@ -4,7 +4,9 @@
 
 hl.config({
     input = {
-        kb_layout = "latam",
+        -- latam is first, so it stays the default at login.
+        -- Switching is done from Settings (hyprctl switchxkblayout), not a keybind.
+        kb_layout = "latam,us",
         kb_variant = "",
         kb_model = "",
         kb_options = "",

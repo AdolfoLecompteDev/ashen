@@ -152,6 +152,60 @@ Item {
                 }
             }
 
+            Text {
+                text: "Keyboard Layout"
+                color: Services.Colors.mist
+                font.pixelSize: 11
+                font.family: "JetBrainsMono NF"
+            }
+
+            RowLayout {
+                spacing: 10
+                Repeater {
+                    model: Services.Keyboard.layouts
+                    delegate: Rectangle {
+                        id: kbCard
+                        required property var modelData
+                        required property int index
+                        readonly property bool active: Services.Keyboard.activeIndex === kbCard.index
+                        width: 100; height: 64
+                        radius: 12
+                        color: kbCard.active ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.12)
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            spacing: 4
+                            Text {
+                                text: "\uE312"
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 20
+                                color: kbCard.active ? Services.Colors.abyss : Services.Colors.mist
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            Text {
+                                text: kbCard.modelData.toUpperCase()
+                                font.pixelSize: 10
+                                font.family: "JetBrainsMono NF"
+                                color: kbCard.active ? Services.Colors.abyss : Services.Colors.mist
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Services.Keyboard.setLayout(kbCard.index)
+                        }
+                    }
+                }
+            }
+
+            Text {
+                text: Services.Keyboard.keymap
+                color: Services.Colors.ash
+                font.pixelSize: 10
+                font.family: "JetBrainsMono NF"
+            }
+
             Item { Layout.preferredHeight: 8 }
         }
     }

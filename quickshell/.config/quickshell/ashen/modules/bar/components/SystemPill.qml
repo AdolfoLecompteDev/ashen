@@ -20,24 +20,31 @@ Rectangle {
         anchors.centerIn: parent
         spacing: 4
 
-        // Notificaciones
+        // Keyboard layout: read-only. Switching lives in Settings > System.
         Rectangle {
-            width: root.innerH; height: root.innerH
+            height: root.innerH
             radius: root.innerR
-            color: Services.AppState.notificationsVisible ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.2)
-            Behavior on color { ColorAnimation { duration: 300 } }
-            Text {
+            width: kbInner.width + 16
+            color: Services.Colors.ghostAlpha(0.2)
+
+            Row {
+                id: kbInner
                 anchors.centerIn: parent
-                text: ""
-                color: Services.AppState.notificationsVisible ? Services.Colors.abyss : Services.Colors.mist
-                font.pixelSize: 18
-                font.family: "Material Symbols Rounded"
-                Behavior on color { ColorAnimation { duration: 200 } }
-            }
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: Services.AppState.notificationsVisible = !Services.AppState.notificationsVisible
+                spacing: 5
+                Text {
+                    text: "\uE312"
+                    color: Services.Colors.mist
+                    font.pixelSize: 18
+                    font.family: "Material Symbols Rounded"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                Text {
+                    text: Services.Keyboard.label
+                    color: Services.Colors.snow
+                    font.pixelSize: 12
+                    font.family: "JetBrainsMono NF"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
         }
         
