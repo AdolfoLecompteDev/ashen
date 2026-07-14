@@ -5,6 +5,12 @@
 # a scheme is applied.
 kitty/.config/kitty/ashen-colors.conf
 
+# matugen writes these from the wallpaper on every change. They belong in
+# ~/.config, not here — this only catches the case where stow folded the
+# gtk-3.0/gtk-4.0 directories into symlinks back at the repo.
+gtk/.config/gtk-3.0/gtk.css
+gtk/.config/gtk-4.0/gtk.css
+
 # ── Editor / OS noise ─────────────────────────────────────────────────────
 *.swp
 *.swo

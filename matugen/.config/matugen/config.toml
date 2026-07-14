@@ -6,6 +6,12 @@ set = false
 [templates.ashen_colors]
 input_path = "~/.config/matugen/templates/scheme.json.template"
 output_path = "/home/adolf/.cache/ashen_scheme.json"
+[templates.gtk3]
+input_path = "~/.config/matugen/templates/gtk3.css"
+output_path = "/home/adolf/.config/gtk-3.0/gtk.css"
+[templates.gtk4]
+input_path = "~/.config/matugen/templates/gtk4.css"
+output_path = "/home/adolf/.config/gtk-4.0/gtk.css"
 [templates.hypr_border]
 input_path = "~/.config/matugen/templates/border_color.template"
 output_path = "/home/adolf/.cache/matugen_border_color.txt"

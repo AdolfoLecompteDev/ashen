@@ -49,7 +49,7 @@ PKGS_OFFICIAL=(
     wl-clipboard cliphist grim slurp wf-recorder
     hypridle mpvpaper ffmpeg
     nemo zenity fastfetch cava
-    sddm papirus-icon-theme ttf-jetbrains-mono-nerd
+    sddm papirus-icon-theme ttf-jetbrains-mono-nerd adw-gtk3
     xdg-desktop-portal-hyprland polkit-gnome
 )
 
@@ -115,6 +115,11 @@ if [[ $DO_STOW -eq 1 ]]; then
     if ! command -v stow >/dev/null; then
         warn "stow is not installed — skipping. Install it and re-run, or symlink by hand."
     else
+        # Pre-create the GTK dirs so stow links the files inside them instead of
+        # folding the whole directory into a symlink at the repo. Folded, matugen
+        # would write its generated gtk.css straight into the git tree.
+        mkdir -p "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
+
         say "Symlinking configs with stow..."
         ( cd "$REPO_DIR" && stow -t "$HOME" "${STOW_PKGS[@]}" ) \
             || warn "stow reported conflicts — move the offending files aside and re-run"
@@ -124,12 +129,36 @@ else
 fi
 
 # ── 5. Theme ──────────────────────────────────────────────────────────────
+# On Wayland, GTK apps read the theme from the settings portal, which serves
+# org.gnome.desktop.interface — settings.ini alone is ignored. Nemo is a
+# Cinnamon app and reads its own namespace on top. All three have to agree or
+# apps render in different themes.
 say "Applying GTK settings..."
-gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark'
-gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark'
+for schema in org.gnome.desktop.interface org.cinnamon.desktop.interface; do
+    gsettings writable "$schema" gtk-theme >/dev/null 2>&1 || continue
+    gsettings set "$schema" gtk-theme 'adw-gtk3-dark'
+    gsettings set "$schema" icon-theme 'Papirus-Dark'
+    gsettings set "$schema" font-name 'Adwaita Sans 11'
+    gsettings set "$schema" cursor-theme 'Bibata-Modern-Ice'
+    gsettings set "$schema" cursor-size 24
+done
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Ice'
-gsettings set org.gnome.desktop.interface cursor-size 24
+
+# adw-gtk3-dark supplies the widget shapes; matugen paints them from the
+# wallpaper into ~/.config/gtk-{3,4}.0/gtk.css. That file is generated, never
+# committed — without a wallpaper there is nothing to derive colors from.
+if [[ ! -f "$HOME/.config/gtk-3.0/gtk.css" ]]; then
+    wall="$(find "$HOME/Pictures/Wallpapers" -maxdepth 1 -type f \
+        \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -print -quit 2>/dev/null)"
+    if [[ -n "$wall" ]] && command -v matugen >/dev/null; then
+        say "Generating the GTK palette from $(basename "$wall")..."
+        matugen image "$wall" --mode dark --source-color-index 0 >/dev/null \
+            && ok "GTK palette generated"
+    else
+        warn "No wallpaper in ~/Pictures/Wallpapers — GTK stays uncolored."
+        warn "Drop one in and pick it from the shell; matugen paints GTK too."
+    fi
+fi
 
 if command -v papirus-folders >/dev/null; then
     say "Applying Papirus folder colors..."

@@ -1,5 +1,7 @@
 /* ══════════════════════════════════════════
    Ashen — GTK3 Template
+   Generado por matugen. NO editar a mano:
+   se sobrescribe al cambiar wallpaper.
    ══════════════════════════════════════════ */
 
 @define-color theme_bg_color {{colors.surface.default.hex}};
@@ -11,9 +13,99 @@
 @define-color insensitive_bg_color {{colors.surface_variant.default.hex}};
 @define-color insensitive_fg_color {{colors.on_surface_variant.default.hex}};
 @define-color borders {{colors.outline.default.hex}};
+@define-color sidebar_bg_color {{colors.surface_container.default.hex}};
 
 /* Transparencia para blur */
 window, .background {
     background-color: alpha(@theme_bg_color, 0.80);
 }
 
+/* ── Nemo / file managers ─────────────────── */
+toolbar, GtkToolbar {
+    background-color: transparent;
+    background-image: none;
+    box-shadow: none;
+    border: none;
+}
+
+.sidebar,
+.sidebar .view,
+placessidebar {
+    background-color: alpha(@sidebar_bg_color, 0.60);
+}
+
+.sidebar row:selected,
+.sidebar row:selected:focus,
+list row:selected,
+list row:selected:focus,
+treeview:selected,
+treeview:selected:focus {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+.view,
+iconview.view,
+iconview {
+    background-color: transparent;
+}
+
+iconview.view:selected,
+iconview.view:selected:focus,
+.view:selected,
+.view:selected:focus {
+    background-color: alpha(@theme_selected_bg_color, 0.35);
+    color: @theme_fg_color;
+    border-radius: 6px;
+}
+
+.floating-bar {
+    background-color: alpha(@sidebar_bg_color, 0.92);
+    color: @theme_fg_color;
+    border: 1px solid alpha(@theme_selected_bg_color, 0.3);
+    border-radius: 10px;
+    padding: 4px 10px;
+    box-shadow: none;
+}
+
+.floating-bar:backdrop {
+    background-color: alpha(@sidebar_bg_color, 0.75);
+}
+
+/* ── Widgets ──────────────────────────────── */
+button {
+    border-radius: 8px;
+}
+
+button.suggested-action {
+    background-color: @theme_selected_bg_color;
+    background-image: none;
+    color: @theme_selected_fg_color;
+    border-color: @theme_selected_bg_color;
+}
+
+button.suggested-action:hover {
+    background-color: {{colors.primary_container.default.hex}};
+    color: {{colors.on_primary_container.default.hex}};
+}
+
+check:checked,
+radio:checked,
+switch:checked {
+    background-color: @theme_selected_bg_color;
+    border-color: @theme_selected_bg_color;
+}
+
+selection,
+entry selection,
+textview text selection,
+label selection {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+dialog,
+window.dialog,
+.background.csd {
+    border-radius: 12px;
+}
