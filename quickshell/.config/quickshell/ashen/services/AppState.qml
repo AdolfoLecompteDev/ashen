@@ -49,7 +49,7 @@ Singleton {
 
     property bool clipboardVisible: false
 
-    property var bigOverlays: ["launcherVisible", "settingsVisible", "emojisVisible", "glyphVisible", "wallpaperVisible", "clipboardVisible"]
+    property var bigOverlays: ["launcherVisible", "settingsVisible", "emojisVisible", "glyphVisible", "wallpaperVisible", "clipboardVisible", "processVisible"]
     function toggleOverlay(name) {
         let wasOpen = root[name]
         for (let n of bigOverlays) root[n] = false
@@ -100,6 +100,7 @@ Singleton {
         root.trayMenuHandle = null
     }
     property bool launcherVisible: false
+    property bool processVisible: false
     property bool wallpaperVisible: false
     property string networkTab: "wifi"
 }
