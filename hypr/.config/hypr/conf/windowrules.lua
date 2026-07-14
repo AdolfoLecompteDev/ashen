@@ -3,7 +3,7 @@
 -- ══════════════════════════════════════════
 
 -- Special Workspaces
-hl.window_rule({ match = { class = "youtube-music" }, workspace = "special:music"   })
+hl.window_rule({ match = { class = "brave-cinhimbnkkaeohfgghhklpknlkffjgod-Default" }, workspace = "special:music"   })
 hl.window_rule({ match = { class = "discord"        }, workspace = "special:discord" })
 
 -- Floating
@@ -12,11 +12,9 @@ hl.window_rule({ match = { class = "blueman-manager" }, float = true })
 hl.window_rule({ match = { class = "nwg-displays"    }, float = true })
 hl.window_rule({ match = { class = "pavucontrol"     }, float = true })
 
--- Opacity
-hl.window_rule({ match = { class = "kitty"   }, opacity = "0.90 override 0.85 override" })
-hl.window_rule({ match = { class = "org.kde.dolphin" }, opacity = "0.82 override 0.75 override" })
-hl.window_rule({ match = { class = "nemo" }, opacity = "0.88 override 0.85 override" })
-hl.window_rule({ match = { class = "codium"  }, opacity = "0.95 override 0.90 override" })
+-- Opacity: no per-class overrides. Every window (terminal, browser,
+-- discord, steam, editor...) uses the global active/inactive_opacity from
+-- decoration.lua, so the frosted glass stays uniform.
 
 -- Size floating
 hl.window_rule({ match = { class = "waypaper"        }, size = "900 600", center = true })

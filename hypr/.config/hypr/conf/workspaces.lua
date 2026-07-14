@@ -7,5 +7,5 @@ for i = 1, 9 do
 end
 
 -- Special Workspaces
-hl.workspace_rule({ workspace = "special:music",   on_created_empty = "firefox" })
+hl.workspace_rule({ workspace = "special:music",   on_created_empty = "/opt/brave-bin/brave --profile-directory=Default --app-id=cinhimbnkkaeohfgghhklpknlkffjgod" })
 hl.workspace_rule({ workspace = "special:discord", on_created_empty = "discord" })
