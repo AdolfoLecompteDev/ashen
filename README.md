@@ -15,6 +15,34 @@ Hyprland · Quickshell · Kitty · Zsh + Powerlevel10k · PipeWire · matugen
   <img src="https://github.com/user-attachments/assets/4d62fbea-c0a3-459a-af28-d8ee252774bd" width="49%" />
 </p>
 
+## Requires
+
+Official repos:
+```
+hyprland kitty zsh stow git base-devel
+pipewire pipewire-pulse pipewire-alsa wireplumber
+networkmanager bluez bluez-utils udisks2 upower
+brightnessctl lm_sensors
+wl-clipboard cliphist grim slurp wf-recorder
+nemo zenity fastfetch cava
+papirus-icon-theme ttf-jetbrains-mono-nerd
+qt6-base qt6-declarative
+xdg-desktop-portal-hyprland polkit-gnome
+```
+
+AUR (via `paru` or similar):
+```
+quickshell-allflags-git awww matugen papirus-folders
+bibata-cursor-theme ttf-material-symbols-variable-git grimblast-git
+```
+
+Plus [Oh My Zsh](https://ohmyz.sh) and [Powerlevel10k](https://github.com/romkatv/powerlevel10k) (not packaged, see their own install instructions).
+
+> If your system locale created localized XDG user folders (e.g. `~/Imágenes` instead of `~/Pictures`), create the English ones manually — Ashen's scripts expect `~/Pictures/wallpapers`, `~/Pictures/Screenshots` and `~/Videos` literally, regardless of system language:
+> ```bash
+> mkdir -p ~/Pictures/wallpapers ~/Pictures/Screenshots ~/Videos
+> ```
+
 ## Install
 
 ```bash
@@ -24,7 +52,9 @@ stow -t ~ cava dconf fastfetch gtk hypr icons kitty matugen quickshell scripts s
 bash scripts/setup-system.sh
 ```
 
-Requires Hyprland, `quickshell-allflags-git`, `kitty`, `zsh`, `stow`, PipeWire, `awww`, `matugen`, `papirus-icon-theme` + `papirus-folders`, Bibata cursors, and a Nerd Font + Material Symbols Rounded. Most are on the official repos; the rest are on the AUR.
+`setup-system.sh` also rewrites any hardcoded paths in the repo to match your `$HOME`, so it works regardless of username.
+
+Set Zsh as your default shell if it isn't already (`chsh -s $(which zsh)`), enable `NetworkManager`, `bluetooth` and `sddm` (`systemctl enable --now ...`), then log in through SDDM selecting the Hyprland session.
 
 ## Usage
 
