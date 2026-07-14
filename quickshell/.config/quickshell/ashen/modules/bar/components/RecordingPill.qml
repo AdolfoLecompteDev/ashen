@@ -4,19 +4,30 @@ import "root:/services" as Services
 
 Rectangle {
     id: root
-    visible: Services.AppState.recording
-    width: visible ? row.width + 20 : 0
+
+    readonly property bool active: Services.AppState.recording
+
+    // Idle it is a square icon-only pill like the ones on the right; while
+    // recording it grows to fit the elapsed time and fills with the accent,
+    // the same inversion every other active pill uses (see SystemPill).
+    width: active ? row.width + 20 : 44
     height: 44
     radius: 10
-    color: Services.Colors.ghost
     clip: true
+    color: active ? Services.Colors.ghost
+                  : (hover.containsMouse ? Services.Colors.ghostAlpha(0.3)
+                                         : Services.Colors.surfaceAlpha(0.82))
+    border.color: active ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.2)
+    border.width: 1
+
     Behavior on width { NumberAnimation { duration: 150 } }
+    Behavior on color { ColorAnimation { duration: 200 } }
 
     property string elapsed: "00:00"
 
     Timer {
         interval: 1000
-        running: Services.AppState.recording
+        running: root.active
         repeat: true
         triggeredOnStart: true
         onTriggered: {
@@ -32,13 +43,15 @@ Rectangle {
         anchors.centerIn: parent
         spacing: 6
         Text {
-            text: ""
-            color: Services.Colors.abyss
-            font.pixelSize: 16
+            text: "\uf679"
+            color: root.active ? Services.Colors.abyss : Services.Colors.mist
+            font.pixelSize: root.active ? 16 : 22
             font.family: "Material Symbols Rounded"
             anchors.verticalCenter: parent.verticalCenter
         }
         Text {
+            visible: root.active
+            width: visible ? implicitWidth : 0
             text: root.elapsed
             color: Services.Colors.abyss
             font.pixelSize: 12
@@ -49,13 +62,10 @@ Rectangle {
     }
 
     MouseArea {
+        id: hover
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            Quickshell.execDetached(["sh", "-c",
-                "PID=$(cat /home/adolf/.cache/ashen_recording.pid 2>/dev/null); [ -n \"$PID\" ] && kill -INT \"$PID\"; rm -f /home/adolf/.cache/ashen_recording.pid /home/adolf/.cache/ashen_recording_start"
-            ])
-            Services.AppState.recording = false
-        }
+        hoverEnabled: true
+        onClicked: Services.AppState.toggleRecording()
     }
 }

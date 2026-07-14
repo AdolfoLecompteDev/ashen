@@ -71,13 +71,7 @@ Scope {
                 Services.AppState.settingsTab = "theme"
                 Services.AppState.settingsVisible = true
             } else if (cmd.action === "record") {
-                let path = "/home/adolf/Videos/ashen_" + Date.now() + ".mp4"
-                let startMs = Date.now()
-                Quickshell.execDetached(["sh", "-c",
-                    "mkdir -p /home/adolf/Videos; wf-recorder -f '" + path + "' & echo $! > /home/adolf/.cache/ashen_recording.pid; echo " + startMs + " > /home/adolf/.cache/ashen_recording_start"
-                ])
-                Services.AppState.recording = true
-                Services.AppState.recordingStartTime = startMs
+                Services.AppState.toggleRecording()
             } else if (cmd.action === "settings") {
                 Services.AppState.settingsVisible = true
             }

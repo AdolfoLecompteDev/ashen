@@ -25,6 +25,28 @@ Singleton {
             }
         }
     }
+    // Screen recording: the pid/start files are the source of truth, so a
+    // shell restart picks an ongoing recording back up (recordingCheckProc).
+    function startRecording() {
+        let startMs = Date.now()
+        let path = "/home/adolf/Videos/ashen_" + startMs + ".mp4"
+        Quickshell.execDetached(["sh", "-c",
+            "mkdir -p /home/adolf/Videos; wf-recorder -f '" + path + "' & echo $! > /home/adolf/.cache/ashen_recording.pid; echo " + startMs + " > /home/adolf/.cache/ashen_recording_start"
+        ])
+        root.recording = true
+        root.recordingStartTime = startMs
+    }
+    function stopRecording() {
+        Quickshell.execDetached(["sh", "-c",
+            "PID=$(cat /home/adolf/.cache/ashen_recording.pid 2>/dev/null); [ -n \"$PID\" ] && kill -INT \"$PID\"; rm -f /home/adolf/.cache/ashen_recording.pid /home/adolf/.cache/ashen_recording_start"
+        ])
+        root.recording = false
+    }
+    function toggleRecording() {
+        if (root.recording) root.stopRecording()
+        else root.startRecording()
+    }
+
     property bool clipboardVisible: false
 
     property var bigOverlays: ["launcherVisible", "settingsVisible", "emojisVisible", "glyphVisible", "wallpaperVisible", "clipboardVisible"]
@@ -60,6 +82,23 @@ Singleton {
     property bool bluetoothVisible: false
     property bool usbVisible: false
     property real usbPillCenterX: 500
+    // DBusMenuHandle of the tray item whose menu is open (null = none)
+    property var trayMenuHandle: null
+    property bool trayMenuVisible: false
+    property real trayMenuCenterX: 900
+    function openTrayMenu(item, centerX) {
+        if (root.trayMenuVisible && root.trayMenuHandle === item.menu) {
+            root.closeTrayMenu()
+            return
+        }
+        root.trayMenuHandle = item.menu
+        root.trayMenuCenterX = centerX
+        root.trayMenuVisible = true
+    }
+    function closeTrayMenu() {
+        root.trayMenuVisible = false
+        root.trayMenuHandle = null
+    }
     property bool launcherVisible: false
     property bool wallpaperVisible: false
     property string networkTab: "wifi"
