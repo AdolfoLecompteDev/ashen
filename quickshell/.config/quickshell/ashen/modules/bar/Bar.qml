@@ -17,7 +17,7 @@ Scope {
             anchors { top: true; left: true; right: true }
             implicitHeight: 56
             color: "transparent"
-            exclusionMode: ExclusionMode.Exclusive
+            exclusionMode: ExclusionMode.Auto
 
             Item {
                 anchors.fill: parent
