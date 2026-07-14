@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.Mpris
+import Quickshell.Services.Pam
 import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
@@ -139,23 +140,27 @@ Scope {
                 }
             }
 
-            Process {
-                id: authProc
-                command: ["sh", "-c", "printf '%s' \"" + surface.password + "\" | su -s /bin/sh -c 'exit 0' adolf-arch 2>/dev/null && echo ok || echo fail"]
-                running: false
-                stdout: StdioCollector {
-                    onStreamFinished: {
-                        if (text.trim() === "ok") {
-                            surface.checking = false
-                            surface.unlocking = true
-                            unlockTimer.start()
-                        } else {
-                            surface.errorMsg = "Incorrect password"
-                            surface.password = ""
-                            passInput.text = ""
-                            surface.checking = false
-                            errorTimer.restart()
-                        }
+            PamContext {
+                id: pam
+
+                config: "login"
+
+                onPamMessage: {
+                    if (responseRequired)
+                        respond(surface.password)
+                }
+
+                onCompleted: result => {
+                    surface.checking = false
+
+                    if (result === PamResult.Success) {
+                        surface.unlocking = true
+                        unlockTimer.start()
+                    } else {
+                        surface.errorMsg = result === PamResult.Error ? "Auth error" : "Incorrect password"
+                        surface.password = ""
+                        passInput.text = ""
+                        errorTimer.restart()
                     }
                 }
             }
@@ -178,12 +183,15 @@ Scope {
                     errorTimer.restart()
                     return
                 }
+                if (pam.active)
+                    return
+
                 surface.checking = true
                 surface.errorMsg = ""
-                authProc.running = true
+                pam.start()
             }
 
-            // ── Contenido principal (con animacion de entrada/salida) ──
+            // ── Main content (with enter/exit animation) ──
             Item {
                 id: content
                 anchors.fill: parent
@@ -288,7 +296,7 @@ Scope {
                                     id: faceImg
                                     anchors.fill: parent
                                     anchors.margins: 2
-                                    source: "file:///home/adolf-arch/.face"
+                                    source: "file:///home/adolf/.face"
                                     fillMode: Image.PreserveAspectCrop
                                     visible: false
                                 }
@@ -446,7 +454,7 @@ Scope {
                         }
                     }
 
-                    // ── Reproductor de musica (abajo a la izquierda) ──
+                    // ── Music player (bottom left) ──
                     Rectangle {
                         anchors.bottom: parent.bottom
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -479,7 +487,7 @@ Scope {
                                 Text {
                                     anchors.centerIn: parent
                                     visible: lockArtImg.status !== Image.Ready
-                                    text: "󿿘"
+                                    text: ""
                                     color: Services.Colors.ghost
                                     font.pixelSize: 20
                                     font.family: "Material Symbols Rounded"
@@ -558,7 +566,7 @@ Scope {
                         width: powerPill.width
                         height: powerPill.height
 
-                        // -- Power: pildora fija a la derecha, opciones se despliegan hacia ARRIBA --
+                        // -- Power: pill fixed on the right, options expand UPWARDS --
                         Rectangle {
                             id: powerPill
                             anchors.right: parent.right
@@ -625,7 +633,7 @@ Scope {
                             }
                         }
 
-                        // -- Bateria: pildora fija a la izquierda de power, perfiles se despliegan hacia la IZQUIERDA --
+                        // -- Battery: pill fixed left of power, profiles expand to the LEFT --
                         Rectangle {
                             id: batteryPill
                             anchors.right: powerPill.left
