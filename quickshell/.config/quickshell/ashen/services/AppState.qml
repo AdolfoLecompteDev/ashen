@@ -10,7 +10,7 @@ Singleton {
 
     Process {
         id: recordingCheckProc
-        command: ["sh", "-c", "PID=$(cat /home/adolf-arch/.cache/ashen_recording.pid 2>/dev/null); if [ -n \"$PID\" ] && kill -0 \"$PID\" 2>/dev/null; then cat /home/adolf-arch/.cache/ashen_recording_start 2>/dev/null; else rm -f /home/adolf-arch/.cache/ashen_recording.pid /home/adolf-arch/.cache/ashen_recording_start; fi"]
+        command: ["sh", "-c", "PID=$(cat /home/adolf/.cache/ashen_recording.pid 2>/dev/null); if [ -n \"$PID\" ] && kill -0 \"$PID\" 2>/dev/null; then cat /home/adolf/.cache/ashen_recording_start 2>/dev/null; else rm -f /home/adolf/.cache/ashen_recording.pid /home/adolf/.cache/ashen_recording_start; fi"]
         running: false
         stdout: StdioCollector {
             onStreamFinished: {

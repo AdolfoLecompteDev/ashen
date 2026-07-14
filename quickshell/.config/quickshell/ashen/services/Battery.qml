@@ -19,10 +19,13 @@ Singleton {
 
     Process {
         id: chargeProc
-        command: ["sh", "-c", "cat /sys/class/power_supply/AC0/online"]
+        command: ["sh", "-c", "cat /sys/class/power_supply/BAT0/status"]
         running: true
         stdout: StdioCollector {
-            onStreamFinished: root.charging = text.trim() === "1"
+            onStreamFinished: {
+                const status = text.trim()
+                root.charging = status === "Charging" || status === "Full" || status === "Not charging"
+            }
         }
     }
 

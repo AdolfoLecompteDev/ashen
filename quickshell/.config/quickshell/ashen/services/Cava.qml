@@ -10,7 +10,7 @@ Singleton {
 
     Process {
         id: cavaProcess
-        command: ["cava", "-p", "/home/adolf-arch/.config/cava/ashen.conf"]
+        command: ["sh", "-c", "exec cava -p \"$HOME/.config/cava/ashen.conf\""]
         running: true
         stdout: SplitParser {
             onRead: data => {

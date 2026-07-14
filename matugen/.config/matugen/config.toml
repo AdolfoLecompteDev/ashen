@@ -5,8 +5,8 @@ command = "true"
 set = false
 [templates.ashen_colors]
 input_path = "~/.config/matugen/templates/scheme.json.template"
-output_path = "/home/adolf-arch/.cache/ashen_scheme.json"
+output_path = "/home/adolf/.cache/ashen_scheme.json"
 [templates.hypr_border]
 input_path = "~/.config/matugen/templates/border_color.template"
-output_path = "/home/adolf-arch/.cache/matugen_border_color.txt"
-post_hook = "BORDER_HEX=$(cat /home/adolf-arch/.cache/matugen_border_color.txt) && hyprctl eval \"hl.config({ general = { col = { active_border = { colors = {'rgba(${BORDER_HEX}ff)'} } } } })\" && sed -i \"s/active_border = { colors = {\\\"rgba([^)]*)\\\"} }/active_border = { colors = {\\\"rgba(${BORDER_HEX}ff)\\\"} }/\" /home/adolf-arch/ashen/hypr/.config/hypr/conf/general.lua"
+output_path = "/home/adolf/.cache/matugen_border_color.txt"
+post_hook = "BORDER_HEX=$(cat /home/adolf/.cache/matugen_border_color.txt) && hyprctl eval \"hl.config({ general = { col = { active_border = { colors = {'rgba(${BORDER_HEX}ff)'} } } } })\" && sed -i \"s/active_border = { colors = {\\\"rgba([^)]*)\\\"} }/active_border = { colors = {\\\"rgba(${BORDER_HEX}ff)\\\"} }/\" /home/adolf/ashen/hypr/.config/hypr/conf/general.lua"

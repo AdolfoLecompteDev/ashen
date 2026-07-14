@@ -46,7 +46,7 @@ Rectangle {
             height: root.innerH
             radius: root.innerR
             width: wifiInner.width + 16
-            color: Services.Network.wifiSsid !== "" ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.2)
+            color: Services.Network.online ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.2)
             Behavior on color { ColorAnimation { duration: 300 } }
 
             MouseArea {
@@ -63,16 +63,16 @@ Rectangle {
                 anchors.centerIn: parent
                 spacing: 5
                 Text {
-                    text: Services.Network.wifiSsid !== "" ? "" : ""
-                    color: Services.Network.wifiSsid !== "" ? Services.Colors.abyss : Services.Colors.ash
+                    text: Services.Network.wifiSsid !== "" ? (Services.Network.wifiSignal >= 75 ? "" : Services.Network.wifiSignal >= 50 ? "" : Services.Network.wifiSignal >= 25 ? "" : "") : (Services.Network.ethConnection !== "" ? "" : "")
+                    color: Services.Network.online ? Services.Colors.abyss : Services.Colors.ash
                     font.pixelSize: 18
                     font.family: "Material Symbols Rounded"
                     anchors.verticalCenter: parent.verticalCenter
                     Behavior on color { ColorAnimation { duration: 200 } }
                 }
                 Text {
-                    text: Services.Network.wifiSsid !== "" ? Services.Network.wifiSsid : "Off"
-                    color: Services.Network.wifiSsid !== "" ? Services.Colors.abyss : Services.Colors.ash
+                    text: Services.Network.wifiSsid !== "" ? Services.Network.wifiSsid : (Services.Network.ethConnection !== "" ? Services.Network.ethConnection : "Off")
+                    color: Services.Network.online ? Services.Colors.abyss : Services.Colors.ash
                     font.pixelSize: 12
                     font.family: "JetBrainsMono NF"
                     anchors.verticalCenter: parent.verticalCenter
