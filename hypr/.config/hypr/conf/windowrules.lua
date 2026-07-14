@@ -10,9 +10,12 @@ hl.window_rule({ match = { class = "discord"        }, workspace = "special:disc
 hl.window_rule({ match = { class = "nwg-displays"    }, float = true })
 hl.window_rule({ match = { class = "pavucontrol"     }, float = true })
 
--- Opacity: no per-class overrides. Every window (terminal, browser,
--- discord, steam, editor...) uses the global active/inactive_opacity from
--- decoration.lua, so the frosted glass stays uniform.
+-- Opacity: global active/inactive_opacity from decoration.lua drives every
+-- window, except browsers: their content is dense enough that the frosted
+-- glass made it unreadable, so they get a bump.
+-- brave.* also catches the PWAs (whatsapp, youtube music...), whose class is
+-- brave-<app-id>-Default. Steam's UI is CEF-based and just as dense.
+hl.window_rule({ match = { class = "^(brave.*|firefox|chromium|google-chrome|steam)$" }, opacity = "0.96 0.92" })
 
 -- Bar blur
 hl.layer_rule({ match = { namespace = "quickshell:.*" }, blur = true })
