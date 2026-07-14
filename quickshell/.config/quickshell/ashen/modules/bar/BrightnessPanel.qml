@@ -8,7 +8,11 @@ PanelWindow {
     anchors { top: true; left: true; right: true; bottom: true }
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    visible: Services.AppState.brightnessVisible
+    // stays mapped through the close animation, so the exit plays in reverse
+    readonly property bool shown: Services.AppState.brightnessVisible
+    visible: shown || closeDelay.running
+    onShownChanged: if (!shown) closeDelay.restart()
+    Timer { id: closeDelay; interval: 300 }
 
     function setBrightness(ratio) {
         ratio = Math.max(0.02, Math.min(1, ratio))

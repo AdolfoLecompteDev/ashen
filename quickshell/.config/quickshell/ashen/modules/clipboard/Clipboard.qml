@@ -23,9 +23,13 @@ Scope {
         anchors { top: true; left: true; right: true; bottom: true }
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
-        visible: Services.AppState.clipboardVisible
+        // stays mapped through the close animation, so the exit plays in reverse
+        readonly property bool shown: Services.AppState.clipboardVisible
+        visible: shown || closeDelay.running
+        onShownChanged: if (!shown) closeDelay.restart()
+        Timer { id: closeDelay; interval: 300 }
 
-        WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
         property var entries: []
         property string searchText: ""

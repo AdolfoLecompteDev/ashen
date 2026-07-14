@@ -17,7 +17,10 @@ PanelWindow {
 
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    visible: Services.AppState.bluetoothVisible
+    // stays mapped through the close animation, so the exit plays in reverse
+    readonly property bool shown: Services.AppState.bluetoothVisible
+    visible: shown || closeDelay.running
+    Timer { id: closeDelay; interval: 300 }
 
     property var adapter: Bluetooth.defaultAdapter
 
@@ -34,17 +37,20 @@ PanelWindow {
         onTriggered: if (root.adapter) root.adapter.discovering = false
     }
 
-    onVisibleChanged: {
-        if (visible) Qt.callLater(startScan)
-        else if (adapter && adapter.discovering) {
-            scanTimer.stop()
-            adapter.discovering = false
+    onShownChanged: {
+        if (shown) Qt.callLater(startScan)
+        else {
+            closeDelay.restart()
+            if (adapter && adapter.discovering) {
+                scanTimer.stop()
+                adapter.discovering = false
+            }
         }
     }
 
     // Bluetooth.defaultAdapter arrives asynchronously over DBus: if the panel is
     // already open when it shows up, the scan has to start right then.
-    onAdapterChanged: if (adapter && visible) Qt.callLater(startScan)
+    onAdapterChanged: if (adapter && shown) Qt.callLater(startScan)
 
     Connections {
         target: root.adapter

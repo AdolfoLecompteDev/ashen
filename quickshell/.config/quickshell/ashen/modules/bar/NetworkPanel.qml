@@ -19,9 +19,13 @@ PanelWindow {
 
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    visible: Services.AppState.networkVisible
+    // stays mapped through the close animation, so the exit plays in reverse
+    readonly property bool shown: Services.AppState.networkVisible
+    visible: shown || closeDelay.running
+    onShownChanged: if (!shown) closeDelay.restart()
+    Timer { id: closeDelay; interval: 300 }
 
-    WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     property bool wifiEnabled: true
     property var networks: []
@@ -82,7 +86,7 @@ PanelWindow {
 
     Timer {
         interval: 15000
-        running: root.visible
+        running: root.shown
         repeat: true
         onTriggered: root.refreshNetworks()
     }

@@ -34,9 +34,12 @@ Scope {
         anchors { top: true; left: true; right: true; bottom: true }
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
-        visible: Services.AppState.wallpaperVisible
+        // stays mapped through the close animation, so the exit plays in reverse
+        readonly property bool shown: Services.AppState.wallpaperVisible
+        visible: shown || closeDelay.running
+        Timer { id: closeDelay; interval: 300 }
 
-        WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
         // Every file found, unfiltered
         property var allWallpapers: []
@@ -79,10 +82,12 @@ Scope {
             view.positionViewAtBeginning()
         }
 
-        onVisibleChanged: {
-            if (visible) {
+        onShownChanged: {
+            if (shown) {
                 if (!scanned) wallpaperScanner.running = true
                 focusItem.forceActiveFocus()
+            } else {
+                closeDelay.restart()
             }
         }
 
@@ -151,6 +156,13 @@ Scope {
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: 8
             z: 30
+
+            opacity: win.shown ? 1.0 : 0.0
+            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+            transform: Translate {
+                y: win.shown ? 0 : 16
+                Behavior on y { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+            }
 
             Repeater {
                 model: [
@@ -224,6 +236,14 @@ Scope {
             height: win.bandHeight
             clip: true
             z: 10
+
+            // Rises from the bottom edge on open, sinks back into it on close
+            opacity: win.shown ? 1.0 : 0.0
+            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+            transform: Translate {
+                y: win.shown ? 0 : 28
+                Behavior on y { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+            }
 
             ListView {
                 id: view

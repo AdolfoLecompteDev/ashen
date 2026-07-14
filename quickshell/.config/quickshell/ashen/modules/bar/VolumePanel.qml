@@ -8,7 +8,11 @@ PanelWindow {
     anchors { top: true; left: true; right: true; bottom: true }
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    visible: Services.AppState.volumeVisible
+    // stays mapped through the close animation, so the exit plays in reverse
+    readonly property bool shown: Services.AppState.volumeVisible
+    visible: shown || closeDelay.running
+    onShownChanged: if (!shown) closeDelay.restart()
+    Timer { id: closeDelay; interval: 300 }
 
     function setVolume(ratio) {
         ratio = Math.max(0, Math.min(1, ratio))

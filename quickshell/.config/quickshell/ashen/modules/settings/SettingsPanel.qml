@@ -20,9 +20,13 @@ Scope {
     anchors { top: true; left: true; right: true; bottom: true }
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    visible: Services.AppState.settingsVisible
+    // stays mapped through the close animation, so the exit plays in reverse
+    readonly property bool shown: Services.AppState.settingsVisible
+    visible: shown || closeDelay.running
+    onShownChanged: if (!shown) closeDelay.restart()
+    Timer { id: closeDelay; interval: 300 }
 
-    WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     property var categories: [
         { id: "general", icon: "", label: "General" },
@@ -51,7 +55,7 @@ Scope {
 
     FocusScope {
         anchors.fill: parent
-        focus: win.visible
+        focus: win.shown
         Keys.onEscapePressed: Services.AppState.settingsVisible = false
     }
 

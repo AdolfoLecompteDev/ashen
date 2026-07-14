@@ -15,7 +15,11 @@ PanelWindow {
 
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    visible: Services.AppState.powerMenuVisible
+    // stays mapped through the close animation, so the exit plays in reverse
+    readonly property bool shown: Services.AppState.powerMenuVisible
+    visible: shown || closeDelay.running
+    onShownChanged: if (!shown) closeDelay.restart()
+    Timer { id: closeDelay; interval: 300 }
 
     Rectangle {
         anchors.fill: parent

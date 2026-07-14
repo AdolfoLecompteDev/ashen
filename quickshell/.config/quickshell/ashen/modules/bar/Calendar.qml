@@ -16,7 +16,11 @@ PanelWindow {
 
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    visible: Services.AppState.calendarVisible
+    // stays mapped through the close animation, so the exit plays in reverse
+    readonly property bool shown: Services.AppState.calendarVisible
+    visible: shown || closeDelay.running
+    onShownChanged: if (!shown) closeDelay.restart()
+    Timer { id: closeDelay; interval: 300 }
 
     property string currentTime: Qt.formatDateTime(new Date(), "hh:mm AP")
     property string currentSecs: Qt.formatDateTime(new Date(), "ss")

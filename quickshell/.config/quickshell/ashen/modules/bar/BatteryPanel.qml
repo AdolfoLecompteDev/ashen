@@ -9,7 +9,10 @@ PanelWindow {
     anchors { top: true; left: true; right: true; bottom: true }
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    visible: Services.AppState.batteryVisible
+    // stays mapped through the close animation, so the exit plays in reverse
+    readonly property bool shown: Services.AppState.batteryVisible
+    visible: shown || closeDelay.running
+    Timer { id: closeDelay; interval: 300 }
 
     property string timeRemaining: "--"
     property var availableProfiles: []
@@ -17,7 +20,10 @@ PanelWindow {
 
     function refreshBattery() { battProc.running = true }
     function refreshProfiles() { profProc.running = true }
-    onVisibleChanged: if (visible) { refreshBattery(); refreshProfiles() }
+    onShownChanged: {
+        if (shown) { refreshBattery(); refreshProfiles() }
+        else closeDelay.restart()
+    }
 
     function setProfile(name) {
         if (!win.availableProfiles.includes(name)) return

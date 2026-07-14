@@ -10,7 +10,11 @@ PanelWindow {
     anchors { top: true; left: true; right: true; bottom: true }
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    visible: Services.AppState.mediaVisible
+    // stays mapped through the close animation, so the exit plays in reverse
+    readonly property bool shown: Services.AppState.mediaVisible
+    visible: shown || closeDelay.running
+    onShownChanged: if (!shown) closeDelay.restart()
+    Timer { id: closeDelay; interval: 300 }
 
     // Raw MPRIS read: drops to null for a few ms while the player changes track
     property var livePlayer: {
@@ -91,7 +95,7 @@ PanelWindow {
 
     FocusScope {
         anchors.fill: parent
-        focus: root.visible
+        focus: root.shown
         Keys.onEscapePressed: Services.AppState.mediaVisible = false
     }
 
