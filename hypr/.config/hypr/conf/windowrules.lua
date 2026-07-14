@@ -15,7 +15,9 @@ hl.window_rule({ match = { class = "pavucontrol"     }, float = true })
 -- glass made it unreadable, so they get a bump.
 -- brave.* also catches the PWAs (whatsapp, youtube music...), whose class is
 -- brave-<app-id>-Default. Steam's UI is CEF-based and just as dense.
-hl.window_rule({ match = { class = "^(brave.*|firefox|chromium|google-chrome|steam)$" }, opacity = "0.96 0.92" })
+-- `override` is mandatory: without it Hyprland multiplies this value by the
+-- global active/inactive_opacity instead of replacing it.
+hl.window_rule({ match = { class = "^(brave.*|firefox|chromium|google-chrome|steam)$" }, opacity = "0.85 override 0.80 override" })
 
 -- Bar blur
 hl.layer_rule({ match = { namespace = "quickshell:.*" }, blur = true })
