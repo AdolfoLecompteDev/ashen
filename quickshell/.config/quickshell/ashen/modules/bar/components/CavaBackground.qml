@@ -43,7 +43,7 @@ Item {
             if (root.barValues.length === 0) return
             var n = root.barValues.length
             var barW = width / n
-            ctx.fillStyle = Services.Colors.ghostAlpha(0.18)
+            ctx.fillStyle = Services.Colors.ghostAlpha(0.30)
             var heightBoost = 2.0
             for (var i = 0; i < n; i++) {
                 var v = Math.max(0, Math.min(100, root.barValues[i])) / 100.0

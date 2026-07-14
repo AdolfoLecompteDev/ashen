@@ -7,8 +7,18 @@ Singleton {
     id: root
     property int volume: 0
     property bool muted: false
+    property bool headphones: false
     function toggleMute() {
         Quickshell.execDetached(["sh", "-c", "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"])
+    }
+
+    // shared by the pill, the OSD and the volume panel
+    function icon(vol, isMuted, isHeadphones) {
+        if (isMuted || vol === 0)
+            return "\ue04f"
+        if (isHeadphones)
+            return "\uf01f"
+        return vol < 66 ? "\ue04d" : "\ue050"
     }
 
     property int micVolume: 0
@@ -47,10 +57,21 @@ Singleton {
     }
 
 
+    Process {
+        id: sinkProc
+        command: ["sh", "-c", "pactl get-default-sink"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.headphones = /headphone|headset|bluez/i.test(text)
+            }
+        }
+    }
+
     Timer {
         interval: 1000
         running: true
         repeat: true
-        onTriggered: { volProc.running = true; micProc.running = true }
+        onTriggered: { volProc.running = true; micProc.running = true; sinkProc.running = true }
     }
 }

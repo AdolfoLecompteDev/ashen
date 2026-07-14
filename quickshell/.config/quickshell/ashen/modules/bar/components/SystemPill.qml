@@ -142,7 +142,7 @@ Rectangle {
                 anchors.centerIn: parent
                 spacing: 5
                 Text {
-                    text: Services.Audio.muted ? "" : (Services.Audio.volume === 0 ? "" : Services.Audio.volume < 66 ? "" : "")
+                    text: Services.Audio.icon(Services.Audio.volume, Services.Audio.muted, Services.Audio.headphones)
                     color: (!Services.Audio.muted && Services.Audio.volume > 0) ? Services.Colors.abyss : Services.Colors.ash
                     font.pixelSize: 18
                     font.family: "Material Symbols Rounded"

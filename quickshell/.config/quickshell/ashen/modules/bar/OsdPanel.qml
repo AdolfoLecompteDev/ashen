@@ -25,7 +25,7 @@ Scope {
                 let muted = text.indexOf("MUTED") !== -1
                 let match = text.match(/([0-9]*\.?[0-9]+)/)
                 let vol = match ? parseFloat(match[1]) : 0
-                let ic = muted ? "" : (vol > 0.5 ? "" : "")
+                let ic = Services.Audio.icon(muted ? 0 : Math.round(vol * 100), muted, Services.Audio.headphones)
                 win.showOsd(ic, muted ? 0 : vol)
             }
         }

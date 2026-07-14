@@ -55,7 +55,7 @@ PanelWindow {
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: Services.Audio.muted ? "" : (Services.Audio.volume === 0 ? "" : (Services.Audio.volume < 66 ? "" : ""))
+                text: Services.Audio.icon(Services.Audio.volume, Services.Audio.muted, Services.Audio.headphones)
                 font.family: "Material Symbols Rounded"
                 font.pixelSize: 18
                 color: Services.Colors.ghost
