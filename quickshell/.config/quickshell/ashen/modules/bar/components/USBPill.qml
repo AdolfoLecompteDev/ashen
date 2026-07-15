@@ -17,7 +17,7 @@ Rectangle {
     radius: 10
     color: root.anyMounted ? Services.Colors.ghost : Services.Colors.surfaceAlpha(0.82)
     border.color: Services.Colors.ghostAlpha(0.2)
-    border.width: 1
+    border.width: 0
     width: Services.USB.devices.length > 0 ? (icon.implicitWidth + 24) : 0
     opacity: Services.USB.devices.length > 0 ? 1.0 : 0.0
     clip: true

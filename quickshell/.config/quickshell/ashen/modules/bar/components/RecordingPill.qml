@@ -18,7 +18,7 @@ Rectangle {
                   : (hover.containsMouse ? Services.Colors.ghostAlpha(0.3)
                                          : Services.Colors.surfaceAlpha(0.82))
     border.color: active ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.2)
-    border.width: 1
+    border.width: 0
 
     Behavior on width { NumberAnimation { duration: 150 } }
     Behavior on color { ColorAnimation { duration: 200 } }

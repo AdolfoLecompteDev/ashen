@@ -10,7 +10,7 @@ Rectangle {
     radius: 10
     color: Services.Colors.surfaceAlpha(0.82)
     border.color: Services.Colors.ghostAlpha(0.2)
-    border.width: 1
+    border.width: 0
 
     Text {
         anchors.centerIn: parent
