@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import "root:/services" as Services
+import "root:/modules/widgets" as Widgets
 
 PanelWindow {
     id: win
@@ -81,7 +82,7 @@ PanelWindow {
                 Text {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    text: Services.Audio.muted ? "Muted" : Services.Audio.volume + "%"
+                    text: Services.Audio.muted ? "Muted" : Math.round(volBar.shown * 100) + "%"
                     color: Services.Colors.snow
                     font.pixelSize: 14
                     font.bold: true
@@ -89,53 +90,15 @@ PanelWindow {
                 }
             }
 
-            Rectangle {
-                id: track
+            Widgets.SliderTrack {
+                id: volBar
                 width: parent.width
-                height: 10
-                radius: 5
-                color: Services.Colors.ghostAlpha(0.15)
-
-                property real dragRatio: -1
-                readonly property real uiRatio: dragRatio >= 0 ? dragRatio : Services.Audio.volume / 100
-
-                Rectangle {
-                    id: volFill
-                    anchors.left: parent.left
-                    height: parent.height
-                    radius: 5
-                    color: Services.Colors.ghost
-                    width: track.width * track.uiRatio
-                    Behavior on width { enabled: track.dragRatio < 0; NumberAnimation { duration: 120 } }
-                }
-
-                Rectangle {
-                    id: volKnob
-                    width: 18; height: 18; radius: 9
-                    color: Services.Colors.snow
-                    border.color: Services.Colors.ghostAlpha(0.45)
-                    border.width: 1
-                    anchors.verticalCenter: parent.verticalCenter
-                    x: Math.max(0, Math.min(track.width - width, volFill.width - width / 2))
-                    Behavior on x { enabled: track.dragRatio < 0; NumberAnimation { duration: 120 } }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    anchors.topMargin: -14
-                    anchors.bottomMargin: -14
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    function apply(mx) {
-                        let r = Math.max(0, Math.min(1, mx / track.width))
-                        track.dragRatio = r
-                        win.setVolume(r)
-                    }
-                    onPressed: mouse => apply(mouse.x)
-                    onPositionChanged: mouse => { if (pressed) apply(mouse.x) }
-                    onReleased: track.dragRatio = -1
-                    onCanceled: track.dragRatio = -1
-                }
+                knobSize: 18
+                knobBorder: 1
+                knobBorderColor: Services.Colors.ghostAlpha(0.45)
+                hitMargin: 14
+                value: Services.Audio.volume / 100
+                onMoved: r => win.setVolume(r)
             }
 
             // ── Divider ────────────────────────────
@@ -190,7 +153,7 @@ PanelWindow {
                 Text {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    text: Services.Audio.micMuted ? "Muted" : Services.Audio.micVolume + "%"
+                    text: Services.Audio.micMuted ? "Muted" : Math.round(micBar.shown * 100) + "%"
                     color: Services.Audio.micMuted ? Services.Colors.error_ : Services.Colors.snow
                     font.pixelSize: 14
                     font.bold: true
@@ -198,54 +161,17 @@ PanelWindow {
                 }
             }
 
-            Rectangle {
-                id: micTrack
+            Widgets.SliderTrack {
+                id: micBar
                 width: parent.width
-                height: 10
-                radius: 5
-                color: Services.Colors.ghostAlpha(0.15)
-                opacity: Services.Audio.micMuted ? 0.4 : 1.0
-
-                property real dragRatio: -1
-                readonly property real uiRatio: dragRatio >= 0 ? dragRatio : Services.Audio.micVolume / 100
-
-                Rectangle {
-                    id: micFill
-                    anchors.left: parent.left
-                    height: parent.height
-                    radius: 5
-                    color: Services.Audio.micMuted ? Services.Colors.error_ : Services.Colors.ghost
-                    width: micTrack.width * micTrack.uiRatio
-                    Behavior on width { enabled: micTrack.dragRatio < 0; NumberAnimation { duration: 120 } }
-                }
-
-                Rectangle {
-                    id: micKnob
-                    width: 18; height: 18; radius: 9
-                    color: Services.Colors.snow
-                    border.color: Services.Colors.ghostAlpha(0.45)
-                    border.width: 1
-                    anchors.verticalCenter: parent.verticalCenter
-                    x: Math.max(0, Math.min(micTrack.width - width, micFill.width - width / 2))
-                    Behavior on x { enabled: micTrack.dragRatio < 0; NumberAnimation { duration: 120 } }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    anchors.topMargin: -14
-                    anchors.bottomMargin: -14
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    function apply(mx) {
-                        let r = Math.max(0, Math.min(1, mx / micTrack.width))
-                        micTrack.dragRatio = r
-                        Services.Audio.setMicVolume(Math.round(r * 100))
-                    }
-                    onPressed: mouse => apply(mouse.x)
-                    onPositionChanged: mouse => { if (pressed) apply(mouse.x) }
-                    onReleased: micTrack.dragRatio = -1
-                    onCanceled: micTrack.dragRatio = -1
-                }
+                knobSize: 18
+                knobBorder: 1
+                knobBorderColor: Services.Colors.ghostAlpha(0.45)
+                hitMargin: 14
+                dimmed: Services.Audio.micMuted
+                fillColor: Services.Audio.micMuted ? Services.Colors.error_ : Services.Colors.ghost
+                value: Services.Audio.micVolume / 100
+                onMoved: r => Services.Audio.setMicVolume(Math.round(r * 100))
             }
         }
     }

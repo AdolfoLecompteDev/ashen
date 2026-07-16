@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import "root:/services" as Services
+import "root:/modules/widgets" as Widgets
 
 PanelWindow {
     id: win
@@ -81,7 +82,7 @@ PanelWindow {
                 Text {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    text: Services.Brightness.level + "%"
+                    text: Math.round(brightBar.shown * 100) + "%"
                     color: Services.Colors.snow
                     font.pixelSize: 14
                     font.bold: true
@@ -90,55 +91,15 @@ PanelWindow {
             }
 
             // Slider
-            Rectangle {
-                id: track
+            Widgets.SliderTrack {
+                id: brightBar
                 width: parent.width
-                height: 10
-                radius: 5
-                color: Services.Colors.ghostAlpha(0.15)
-
-                // -1 = follow the service value; otherwise the ratio being dragged
-                property real dragRatio: -1
-                readonly property real uiRatio: dragRatio >= 0 ? dragRatio : Services.Brightness.level / 100
-
-                Rectangle {
-                    id: fill
-                    anchors.left: parent.left
-                    height: parent.height
-                    radius: 5
-                    color: Services.Colors.ghost
-                    width: track.width * track.uiRatio
-                    // animate only when following the service, never while dragging
-                    Behavior on width { enabled: track.dragRatio < 0; NumberAnimation { duration: 120 } }
-                }
-
-                Rectangle {
-                    id: knob
-                    width: 18; height: 18; radius: 9
-                    color: Services.Colors.snow
-                    border.color: Services.Colors.ghostAlpha(0.45)
-                    border.width: 1
-                    anchors.verticalCenter: parent.verticalCenter
-                    x: Math.max(0, Math.min(track.width - width, fill.width - width / 2))
-                    Behavior on x { enabled: track.dragRatio < 0; NumberAnimation { duration: 120 } }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    anchors.topMargin: -14
-                    anchors.bottomMargin: -14
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    function apply(mx) {
-                        let r = Math.max(0, Math.min(1, mx / track.width))
-                        track.dragRatio = r
-                        win.setBrightness(r)
-                    }
-                    onPressed: mouse => apply(mouse.x)
-                    onPositionChanged: mouse => { if (pressed) apply(mouse.x) }
-                    onReleased: track.dragRatio = -1
-                    onCanceled: track.dragRatio = -1
-                }
+                knobSize: 18
+                knobBorder: 1
+                knobBorderColor: Services.Colors.ghostAlpha(0.45)
+                hitMargin: 14
+                value: Services.Brightness.level / 100
+                onMoved: r => win.setBrightness(r)
             }
         }
     }
