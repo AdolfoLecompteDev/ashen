@@ -11,3 +11,4 @@ end
 -- ~/.config/brave-flags.conf, which is what routes notifications to D-Bus
 hl.workspace_rule({ workspace = "special:music",   on_created_empty = "/usr/bin/brave --profile-directory=Default --app-id=cinhimbnkkaeohfgghhklpknlkffjgod" })
 hl.workspace_rule({ workspace = "special:discord", on_created_empty = "discord" })
+hl.workspace_rule({ workspace = "special:notes",   on_created_empty = "obsidian" })

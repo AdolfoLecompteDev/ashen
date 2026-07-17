@@ -5,9 +5,9 @@
 -- Special Workspaces
 hl.window_rule({ match = { class = "brave-cinhimbnkkaeohfgghhklpknlkffjgod-Default" }, workspace = "special:music"   })
 hl.window_rule({ match = { class = "discord"        }, workspace = "special:discord" })
+hl.window_rule({ match = { class = "obsidian"        }, workspace = "special:notes" })
 
 -- Floating
-hl.window_rule({ match = { class = "nwg-displays"    }, float = true })
 hl.window_rule({ match = { class = "pavucontrol"     }, float = true })
 
 -- Opacity: global active/inactive_opacity from decoration.lua drives every

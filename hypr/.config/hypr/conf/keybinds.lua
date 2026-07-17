@@ -46,13 +46,15 @@ end
 -- Workspace 10
 hl.bind(mod .. " + 0",       hl.dsp.focus({ workspace = 10 }))
 hl.bind(mod .. " + ALT + 0", hl.dsp.window.move({ workspace = 10 }))
-	
+
 hl.bind(mod .. " + ALT + left",  hl.dsp.window.move({ workspace = "e-1" }))
 hl.bind(mod .. " + ALT + right", hl.dsp.window.move({ workspace = "e+1" }))
 
 -- Special Workspaces
 hl.bind(mod .. " + M", hl.dsp.workspace.toggle_special("music"))
 hl.bind(mod .. " + D", hl.dsp.workspace.toggle_special("discord"))
+hl.bind(mod .. " + O", hl.dsp.workspace.toggle_special("notes"))
+hl.bind(mod .. " + X", hl.dsp.workspace.toggle_special("fav"))
 
 -- System
 hl.bind(mod .. " + SHIFT + E", hl.dsp.exit())
