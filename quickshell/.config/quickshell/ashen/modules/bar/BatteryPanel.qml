@@ -88,7 +88,7 @@ PanelWindow {
         anchors.top: parent.top
         anchors.topMargin: 64
         width: 440
-        height: 230
+        height: 330
         x: Math.max(12, Math.min(parent.width - width - 12, Services.AppState.batteryPillCenterX - width / 2))
         radius: 18
         color: Services.Colors.surfaceAlpha(0.95)
@@ -111,72 +111,101 @@ PanelWindow {
             anchors.margins: 20
             spacing: 12
 
-            RowLayout {
-                spacing: 14
+            // Battery box: a rounded-rectangle OUTLINE that fills along its own
+            // border — a dim full track, then an accent stroke covering a fraction
+            // of the perimeter equal to the charge level. Percentage sits centered.
+            Item {
+                id: battBox
+                Layout.fillWidth: true
+                Layout.preferredHeight: 120
+
+                // Animated fraction the canvas repaints from
+                property real frac: Services.Battery.level / 100
+                Behavior on frac { NumberAnimation { duration: 500; easing.type: Easing.OutCubic } }
+                onFracChanged: battCanvas.requestPaint()
+                onWidthChanged: battCanvas.requestPaint()
+                onHeightChanged: battCanvas.requestPaint()
+
+                Canvas {
+                    id: battCanvas
+                    anchors.fill: parent
+                    onPaint: {
+                        var ctx = getContext("2d")
+                        ctx.reset()
+                        var lw = 5
+                        var r = 22
+                        var x = lw / 2, y = lw / 2
+                        var w = width - lw, h = height - lw
+                        function path() {
+                            ctx.beginPath()
+                            ctx.moveTo(x + r, y)
+                            ctx.lineTo(x + w - r, y)
+                            ctx.arcTo(x + w, y, x + w, y + r, r)
+                            ctx.lineTo(x + w, y + h - r)
+                            ctx.arcTo(x + w, y + h, x + w - r, y + h, r)
+                            ctx.lineTo(x + r, y + h)
+                            ctx.arcTo(x, y + h, x, y + h - r, r)
+                            ctx.lineTo(x, y + r)
+                            ctx.arcTo(x, y, x + r, y, r)
+                            ctx.closePath()
+                        }
+                        ctx.lineWidth = lw
+                        ctx.lineCap = "round"
+                        // Dim full track
+                        path()
+                        ctx.strokeStyle = Services.Colors.ghostAlpha(0.15)
+                        ctx.stroke()
+                        // Accent fill: one dash covering frac of the perimeter
+                        var frac = Math.max(0, Math.min(1, battBox.frac))
+                        if (frac > 0) {
+                            var perim = 2 * (w + h) - 8 * r + 2 * Math.PI * r
+                            path()
+                            ctx.strokeStyle = Services.Colors.ghost
+                            ctx.setLineDash([perim * frac, perim])
+                            ctx.stroke()
+                            ctx.setLineDash([])
+                        }
+                    }
+                }
+
+                // Centered percentage
                 Text {
+                    anchors.centerIn: parent
                     text: Services.Battery.level + "%"
                     color: Services.Colors.snow
-                    font.pixelSize: 28
+                    font.pixelSize: 44
                     font.bold: true
                     font.family: "JetBrainsMono NF"
                 }
-                ColumnLayout {
-                    spacing: 2
-                    Text {
-                        text: Services.Battery.charging ? "Charging" : "On battery"
-                        color: Services.Colors.ghost
-                        font.pixelSize: 12
-                        font.family: "JetBrainsMono NF"
-                    }
-                    Text {
-                        text: win.timeRemaining !== "--" ? win.timeRemaining : (Services.Battery.charging ? "Fully charged" : "Calculating...")
-                        color: Services.Colors.ash
-                        font.pixelSize: 10
-                        font.family: "JetBrainsMono NF"
-                    }
-                }
             }
 
-            ColumnLayout {
+            // Status under the box: charging state + time to full/empty
+            RowLayout {
                 Layout.fillWidth: true
-                spacing: 4
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 6
-                    radius: 3
-                    color: Services.Colors.ghostAlpha(0.15)
-                    Rectangle {
-                        height: parent.height
-                        radius: 3
-                        color: Services.Colors.ghost
-                        width: parent.width * (Services.Battery.level / 100)
-                        Behavior on width { NumberAnimation { duration: 300 } }
-                    }
+                spacing: 8
+                Text {
+                    visible: Services.Battery.charging
+                    text: "\uea0b"
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 16
+                    color: Services.Colors.ghost
                 }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    Text {
-                        text: "0%"
-                        color: Services.Colors.ash
-                        font.pixelSize: 9
-                        font.family: "JetBrainsMono NF"
-                    }
-                    Item { Layout.fillWidth: true }
-                    Text {
-                        text: win.timeRemaining !== "--" ? ("Remaining: " + win.timeRemaining) : ""
-                        color: Services.Colors.mist
-                        font.pixelSize: 9
-                        font.family: "JetBrainsMono NF"
-                    }
-                    Item { Layout.fillWidth: true }
-                    Text {
-                        text: "100%"
-                        color: Services.Colors.ash
-                        font.pixelSize: 9
-                        font.family: "JetBrainsMono NF"
-                    }
+                Text {
+                    text: Services.Battery.charging ? "Charging" : "On battery"
+                    color: Services.Colors.snow
+                    font.pixelSize: 13
+                    font.bold: true
+                    font.family: "JetBrainsMono NF"
+                }
+                Item { Layout.fillWidth: true }
+                Text {
+                    text: win.timeRemaining !== "--"
+                        ? (Services.Battery.charging ? ("Full in " + win.timeRemaining) : (win.timeRemaining + " left"))
+                        : (Services.Battery.charging ? "Fully charged" : "Calculating...")
+                    color: Services.Colors.ash
+                    font.pixelSize: 11
+                    font.bold: true
+                    font.family: "JetBrainsMono NF"
                 }
             }
 
