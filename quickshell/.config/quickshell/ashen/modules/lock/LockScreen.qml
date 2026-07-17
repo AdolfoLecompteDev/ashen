@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Widgets
 import Quickshell.Services.Mpris
 import Quickshell.Services.Pam
 import Qt5Compat.GraphicalEffects
@@ -219,6 +220,43 @@ Scope {
                 pam.start()
             }
 
+            // Persistent blurred-wallpaper backdrop, shared by the intro overlay
+            // and the lock content so both sit on the same background (no black
+            // flash during the intro). surface.wallpaper is already resolved to a
+            // still — or the extracted video frame — by wallpaperProc.
+            Item {
+                id: bgLayer
+                anchors.fill: parent
+
+                Image {
+                    id: wallImg
+                    anchors.fill: parent
+                    source: surface.wallpaper !== "" ? ("file://" + surface.wallpaper) : ""
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    // frame path is fixed but its contents change per video;
+                    // no cache or the lock shows the previous wallpaper's frame
+                    cache: false
+                    visible: false
+                }
+                FastBlur {
+                    anchors.fill: parent
+                    source: wallImg
+                    radius: 64
+                    visible: wallImg.status === Image.Ready
+                    opacity: 0.45
+                }
+                // Vignette: darker at the edges so the corner pills stay readable
+                Rectangle {
+                    anchors.fill: parent
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: Qt.rgba(Services.Colors.abyss.r, Services.Colors.abyss.g, Services.Colors.abyss.b, 0.45) }
+                        GradientStop { position: 0.5; color: Qt.rgba(Services.Colors.abyss.r, Services.Colors.abyss.g, Services.Colors.abyss.b, 0.62) }
+                        GradientStop { position: 1.0; color: Qt.rgba(Services.Colors.abyss.r, Services.Colors.abyss.g, Services.Colors.abyss.b, 0.80) }
+                    }
+                }
+            }
+
             // ── Main content (with enter/exit animation) ──
             Item {
                 id: content
@@ -228,174 +266,190 @@ Scope {
                 Behavior on opacity { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
                 Behavior on scale { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
 
-                Rectangle {
+                Item {
                     anchors.fill: parent
-                    color: Services.Colors.abyss
 
-                    Image {
-                        id: wallImg
-                        anchors.fill: parent
-                        source: surface.wallpaper !== "" ? ("file://" + surface.wallpaper) : ""
-                        fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
-                        // frame path is fixed but its contents change per video;
-                        // no cache or the lock shows the previous wallpaper's frame
-                        cache: false
-                        visible: false
-                    }
-                    FastBlur {
-                        anchors.fill: parent
-                        source: wallImg
-                        radius: 64
-                        visible: wallImg.status === Image.Ready
-                        opacity: 0.45
-                    }
-                    // Vignette: darker at the edges so the corner pills stay readable
-                    Rectangle {
-                        anchors.fill: parent
-                        gradient: Gradient {
-                            GradientStop { position: 0.0; color: Qt.rgba(Services.Colors.abyss.r, Services.Colors.abyss.g, Services.Colors.abyss.b, 0.45) }
-                            GradientStop { position: 0.5; color: Qt.rgba(Services.Colors.abyss.r, Services.Colors.abyss.g, Services.Colors.abyss.b, 0.62) }
-                            GradientStop { position: 1.0; color: Qt.rgba(Services.Colors.abyss.r, Services.Colors.abyss.g, Services.Colors.abyss.b, 0.80) }
-                        }
-                    }
-
-                    // ── Centre column: clock · avatar · password ──
+                    // ── Clock: editorial, anchored top-left ──
                     Column {
-                        anchors.centerIn: parent
-                        spacing: 28
-
-                        Column {
-                            anchors.horizontalCenter: parent.horizontalCenter
+                        id: clockCol
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.margins: 48
+                        spacing: 0
+                        Row {
                             spacing: 0
-                            Row {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                spacing: 0
-                                Text {
-                                    text: surface.currentTime.split(" ")[0]
-                                    color: Services.Colors.snow
-                                    font.pixelSize: 104
-                                    font.family: "JetBrainsMono NF"
-                                    font.weight: Font.Bold
-                                    font.letterSpacing: -2
-                                }
-                                Column {
-                                    anchors.bottom: parent.bottom
-                                    anchors.bottomMargin: 18
-                                    spacing: 2
-                                    leftPadding: 8
-                                    Text {
-                                        text: surface.currentSecs
-                                        color: Services.Colors.snowAlpha(0.4)
-                                        font.pixelSize: 28
-                                        font.family: "JetBrainsMono NF"
-                                        font.weight: Font.Bold
-                                    }
-                                    Text {
-                                        text: surface.currentTime.split(" ")[1]
-                                        color: Services.Colors.snowAlpha(0.4)
-                                        font.pixelSize: 14
-                                        font.family: "JetBrainsMono NF"
-                                        font.weight: Font.Bold
-                                    }
-                                }
+                            Text {
+                                text: surface.currentTime.split(" ")[0]
+                                color: Services.Colors.snow
+                                font.pixelSize: 104
+                                font.family: "JetBrainsMono NF"
+                                font.weight: Font.Bold
+                                font.letterSpacing: -2
                             }
-                            Row {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                spacing: 10
-                                topPadding: 4
+                            Column {
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 18
+                                spacing: 2
+                                leftPadding: 8
                                 Text {
-                                    text: surface.currentDay + "  ·  " + surface.currentDate
-                                    color: Services.Colors.snowAlpha(0.5)
-                                    font.pixelSize: 15
+                                    text: surface.currentSecs
+                                    color: Services.Colors.snowAlpha(0.4)
+                                    font.pixelSize: 28
                                     font.family: "JetBrainsMono NF"
                                     font.weight: Font.Bold
-                                    font.letterSpacing: 1
-                                    anchors.verticalCenter: parent.verticalCenter
-                                }
-                                Rectangle {
-                                    width: 1; height: 12
-                                    color: Services.Colors.snowAlpha(0.2)
-                                    anchors.verticalCenter: parent.verticalCenter
                                 }
                                 Text {
-                                    text: Services.Weather.icon
-                                    color: Services.Colors.snowAlpha(0.55)
-                                    font.pixelSize: 16
-                                    font.family: "Material Symbols Rounded"
-                                    anchors.verticalCenter: parent.verticalCenter
-                                }
-                                Text {
-                                    text: Services.Weather.temp
-                                    color: Services.Colors.snowAlpha(0.55)
+                                    text: surface.currentTime.split(" ")[1]
+                                    color: Services.Colors.snowAlpha(0.4)
                                     font.pixelSize: 14
                                     font.family: "JetBrainsMono NF"
                                     font.weight: Font.Bold
-                                    anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
                         }
-
-                        Column {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            spacing: 12
+                        Row {
+                            spacing: 10
+                            topPadding: 4
+                            Text {
+                                text: surface.currentDay + "  ·  " + surface.currentDate
+                                color: Services.Colors.snowAlpha(0.5)
+                                font.pixelSize: 15
+                                font.family: "JetBrainsMono NF"
+                                font.weight: Font.Bold
+                                font.letterSpacing: 1
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                             Rectangle {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                width: 116; height: 116
-                                radius: 26
-                                clip: true
-                                color: Services.Colors.ghostAlpha(0.15)
-                                border.color: surface.checking ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.35)
-                                border.width: 2
-                                Behavior on border.color { ColorAnimation { duration: 200 } }
-                                Image {
-                                    id: faceImg
-                                    anchors.fill: parent
-                                    anchors.margins: 2
-                                    source: Services.AppState.facePath
-                                    fillMode: Image.PreserveAspectCrop
-                                    cache: false
-                                    visible: false
-                                }
-                                Rectangle {
-                                    id: faceMask
-                                    anchors.fill: faceImg
-                                    radius: 24
-                                    visible: false
-                                }
-                                OpacityMask {
-                                    anchors.fill: faceImg
-                                    source: faceImg
-                                    maskSource: faceMask
-                                    visible: faceImg.status === Image.Ready
-                                }
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "\uF0D3"
-                                    color: Services.Colors.ghost
-                                    font.pixelSize: 68
-                                    font.family: "Material Symbols Rounded"
-                                    visible: faceImg.status !== Image.Ready
-                                }
+                                width: 1; height: 12
+                                color: Services.Colors.snowAlpha(0.2)
+                                anchors.verticalCenter: parent.verticalCenter
                             }
                             Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: Services.AppState.userLabel
-                                color: Services.Colors.snow
-                                font.pixelSize: 17
+                                text: Services.Weather.icon
+                                color: Services.Colors.snowAlpha(0.55)
+                                font.pixelSize: 16
+                                font.family: "Material Symbols Rounded"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                text: Services.Weather.temp
+                                color: Services.Colors.snowAlpha(0.55)
+                                font.pixelSize: 14
                                 font.family: "JetBrainsMono NF"
-                                font.weight: Font.Medium
-                                font.letterSpacing: 1
+                                font.weight: Font.Bold
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+                    }
+
+                    // ── Recent notifications: last 5 app notifications, under the clock ──
+                    Column {
+                        anchors.top: clockCol.bottom
+                        anchors.left: clockCol.left
+                        anchors.topMargin: 30
+                        spacing: 12
+                        width: 360
+
+                        Repeater {
+                            model: Services.Notifications.history.filter(n => n.source !== "system").slice(0, 5)
+                            delegate: Row {
+                                required property var modelData
+                                spacing: 10
+
+                                Rectangle {
+                                    width: 6; height: 6; radius: 3
+                                    color: Services.Colors.ghost
+                                    y: 5
+                                }
+                                Column {
+                                    spacing: 1
+                                    Text {
+                                        text: modelData.summary && modelData.summary.length > 0 ? modelData.summary : (modelData.appName || "")
+                                        color: Services.Colors.snowAlpha(0.85)
+                                        font.pixelSize: 12
+                                        font.family: "JetBrainsMono NF"
+                                        font.weight: Font.Bold
+                                        elide: Text.ElideRight
+                                        width: 324
+                                    }
+                                    Text {
+                                        text: modelData.body || ""
+                                        visible: text.length > 0
+                                        color: Services.Colors.snowAlpha(0.45)
+                                        font.pixelSize: 11
+                                        font.family: "JetBrainsMono NF"
+                                        elide: Text.ElideRight
+                                        width: 324
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // ── Centre: avatar · password ──
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 24
+
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 180; height: 180
+                            radius: 34
+                            clip: true
+                            color: Services.Colors.ghostAlpha(0.15)
+                            border.color: surface.checking ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.35)
+                            border.width: 2
+                            Behavior on border.color { ColorAnimation { duration: 200 } }
+                            Image {
+                                id: faceImg
+                                anchors.fill: parent
+                                anchors.margins: 2
+                                source: Services.AppState.facePath
+                                fillMode: Image.PreserveAspectCrop
+                                cache: false
+                                visible: false
+                            }
+                            Rectangle {
+                                id: faceMask
+                                anchors.fill: faceImg
+                                radius: 32
+                                visible: false
+                            }
+                            OpacityMask {
+                                anchors.fill: faceImg
+                                source: faceImg
+                                maskSource: faceMask
+                                visible: faceImg.status === Image.Ready
+                            }
+                            Text {
+                                anchors.centerIn: parent
+                                text: "\uF0D3"
+                                color: Services.Colors.ghost
+                                font.pixelSize: 88
+                                font.family: "Material Symbols Rounded"
+                                visible: faceImg.status !== Image.Ready
                             }
                         }
 
-                        Column {
-                            id: authColumn
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            spacing: 10
+                        // Right block spans the avatar height: name pinned to the top,
+                        // password field pinned to the bottom (no card, just aligned edges).
+                        Item {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 340
+                            height: 180
 
-                            // Wrong password: the field shakes instead of only turning red
-                            transform: Translate { id: shakeT; x: 0 }
+                            Text {
+                                anchors.bottom: passField.top
+                                anchors.bottomMargin: 12
+                                anchors.left: passField.left
+                                text: Services.AppState.userLabel
+                                color: Services.Colors.snow
+                                font.pixelSize: 24
+                                font.family: "JetBrainsMono NF"
+                                font.weight: Font.Bold
+                                font.letterSpacing: 1
+                            }
+
                             SequentialAnimation {
                                 id: shakeAnim
                                 NumberAnimation { target: shakeT; property: "x"; to:  9; duration: 55 }
@@ -405,9 +459,14 @@ Scope {
                                 NumberAnimation { target: shakeT; property: "x"; to:  0; duration: 55 }
                             }
 
+                            // Password field pinned to the avatar's bottom edge; it shakes
+                            // on a wrong password (the transform lives on the field now).
                             Rectangle {
+                                id: passField
+                                anchors.bottom: parent.bottom
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 width: 340; height: 52
+                                transform: Translate { id: shakeT; x: 0 }
                                 radius: 12
                                 color: Services.Colors.surfaceAlpha(0.85)
                                 border.color: surface.errorMsg !== "" ? Services.Colors.error_
@@ -445,12 +504,13 @@ Scope {
                                             Repeater {
                                                 model: Math.min(surface.password.length, 24)
                                                 delegate: Rectangle {
-                                                    width: 8; height: 8; radius: 3
+                                                    width: 11; height: 11; radius: 5
                                                     color: Services.Colors.ghost
                                                     anchors.verticalCenter: parent.verticalCenter
-                                                    NumberAnimation on scale {
-                                                        from: 0; to: 1; duration: 160
-                                                        easing.type: Easing.OutBack
+                                                    // Fade in (no bounce): OutBack scale felt springy
+                                                    NumberAnimation on opacity {
+                                                        from: 0; to: 1; duration: 150
+                                                        easing.type: Easing.OutCubic
                                                         running: true
                                                     }
                                                 }
@@ -518,6 +578,8 @@ Scope {
                                 }
                             }
                             Item {
+                                anchors.top: passField.bottom
+                                anchors.topMargin: 6
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 width: 340
                                 height: 16
@@ -540,13 +602,11 @@ Scope {
                         anchors.left: parent.left
                         anchors.bottom: parent.bottom
                         anchors.margins: 24
-                        width: 400
-                        height: 116
+                        width: 460
+                        height: 132
                         radius: 16
                         clip: true
                         color: Services.Colors.surfaceAlpha(0.85)
-                        border.color: Services.Colors.ghostAlpha(0.25)
-                        border.width: 1
 
                         opacity: surface.hasPlayer ? 1.0 : 0.0
                         visible: opacity > 0
@@ -556,28 +616,35 @@ Scope {
                             Behavior on y { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                         }
 
-                        // Same Cava service the bar uses, drawn as the card's backdrop
-                        Canvas {
-                            id: cavaCanvas
+                        // Same Cava service the bar uses, drawn as the card's backdrop.
+                        // Wrapped in a ClippingRectangle so the bars follow the card's
+                        // rounded corners instead of poking out at the sides.
+                        ClippingRectangle {
                             anchors.fill: parent
-                            opacity: Services.Cava.isActive ? 1.0 : 0.0
-                            Behavior on opacity { NumberAnimation { duration: 400 } }
-                            Connections {
-                                target: Services.Cava
-                                function onBarValuesChanged() { cavaCanvas.requestPaint() }
-                            }
-                            onPaint: {
-                                var ctx = getContext("2d")
-                                ctx.reset()
-                                let vals = Services.Cava.barValues
-                                if (!vals || vals.length === 0) return
-                                var n = vals.length
-                                var barW = width / n
-                                ctx.fillStyle = Services.Colors.ghostAlpha(0.16)
-                                for (var i = 0; i < n; i++) {
-                                    var v = Math.max(0, Math.min(100, vals[i])) / 100.0
-                                    var h = v * height * 0.75
-                                    ctx.fillRect(i * barW, height - h, Math.max(1, barW - 1), h)
+                            radius: 16
+                            color: "transparent"
+                            Canvas {
+                                id: cavaCanvas
+                                anchors.fill: parent
+                                opacity: Services.Cava.isActive ? 1.0 : 0.0
+                                Behavior on opacity { NumberAnimation { duration: 400 } }
+                                Connections {
+                                    target: Services.Cava
+                                    function onBarValuesChanged() { cavaCanvas.requestPaint() }
+                                }
+                                onPaint: {
+                                    var ctx = getContext("2d")
+                                    ctx.reset()
+                                    let vals = Services.Cava.barValues
+                                    if (!vals || vals.length === 0) return
+                                    var n = vals.length
+                                    var barW = width / n
+                                    ctx.fillStyle = Services.Colors.ghostAlpha(0.16)
+                                    for (var i = 0; i < n; i++) {
+                                        var v = Math.max(0, Math.min(100, vals[i])) / 100.0
+                                        var h = v * height * 0.75
+                                        ctx.fillRect(i * barW, height - h, Math.max(1, barW - 1), h)
+                                    }
                                 }
                             }
                         }
@@ -761,9 +828,8 @@ Scope {
                             anchors.bottom: parent.bottom
                             width: 44; height: 44
                             radius: 10
-                            color: Services.Colors.surfaceAlpha(0.85)
-                            border.color: Services.Colors.ghostAlpha(0.25)
-                            border.width: 1
+                            color: powerPillHover.containsMouse ? Services.Colors.elevated : Services.Colors.surfaceAlpha(0.85)
+                            Behavior on color { ColorAnimation { duration: 150 } }
                             Text {
                                 anchors.centerIn: parent
                                 text: "\uF8C7"
@@ -773,8 +839,10 @@ Scope {
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
                             MouseArea {
+                                id: powerPillHover
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
+                                hoverEnabled: true
                                 onClicked: surface.showPower = !surface.showPower
                             }
                         }
@@ -786,7 +854,13 @@ Scope {
                             spacing: 6
                             opacity: surface.showPower ? 1.0 : 0.0
                             visible: opacity > 0
-                            Behavior on opacity { NumberAnimation { duration: 200 } }
+                            // Same deploy as the system (bar) panels: fade + slide in
+                            // from the direction it opens — upwards, so it rises from below.
+                            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                            transform: Translate {
+                                y: surface.showPower ? 0 : 12
+                                Behavior on y { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                            }
                             Repeater {
                                 model: [
                                     { icon: "\uF8C7", cmd: "systemctl poweroff", color: Services.Colors.error_ },
@@ -799,11 +873,11 @@ Scope {
                                     anchors.right: parent.right
                                     width: 44; height: 44
                                     radius: 10
-                                    // Declarative hover: assigning color in onEntered kills the binding
-                                    color: powerHover.containsMouse ? Services.Colors.ghostAlpha(0.2)
+                                    // Declarative hover: assigning color in onEntered kills the binding.
+                                    // Opaque hover tone (not a translucent ghost) so it brightens
+                                    // smoothly instead of jumping to transparent over the backdrop.
+                                    color: powerHover.containsMouse ? Services.Colors.elevated
                                                                     : Services.Colors.surfaceAlpha(0.92)
-                                    border.color: Services.Colors.ghostAlpha(0.25)
-                                    border.width: 1
                                     Behavior on color { ColorAnimation { duration: 150 } }
                                     Text {
                                         anchors.centerIn: parent
@@ -831,9 +905,8 @@ Scope {
                             anchors.bottom: parent.bottom
                             width: 78; height: 44
                             radius: 10
-                            color: Services.Colors.surfaceAlpha(0.85)
-                            border.color: Services.Colors.ghostAlpha(0.25)
-                            border.width: 1
+                            color: batteryPillHover.containsMouse ? Services.Colors.elevated : Services.Colors.surfaceAlpha(0.85)
+                            Behavior on color { ColorAnimation { duration: 150 } }
                             Row {
                                 anchors.centerIn: parent
                                 spacing: 4
@@ -853,8 +926,10 @@ Scope {
                                 }
                             }
                             MouseArea {
+                                id: batteryPillHover
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
+                                hoverEnabled: true
                                 onClicked: surface.showProfiles = !surface.showProfiles
                             }
                         }
@@ -866,7 +941,13 @@ Scope {
                             spacing: 6
                             opacity: surface.showProfiles ? 1.0 : 0.0
                             visible: opacity > 0
-                            Behavior on opacity { NumberAnimation { duration: 200 } }
+                            // Same deploy as the system (bar) panels: fade + slide in
+                            // from the direction it opens — leftwards, so it enters from the right.
+                            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                            transform: Translate {
+                                x: surface.showProfiles ? 0 : 12
+                                Behavior on x { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                            }
                             Repeater {
                                 model: [
                                     { id: "power-saver", icon: "\uEC1A" },
@@ -881,8 +962,6 @@ Scope {
                                     radius: 8
                                     color: surface.activeProfile === modelData.id ? Services.Colors.ghost : Services.Colors.surfaceAlpha(0.85)
                                     opacity: available ? 1.0 : 0.3
-                                    border.color: Services.Colors.ghostAlpha(0.25)
-                                    border.width: 1
                                     Behavior on color { ColorAnimation { duration: 150 } }
                                     Text {
                                         anchors.centerIn: parent
@@ -908,7 +987,9 @@ Scope {
             Rectangle {
                 id: introOverlay
                 anchors.fill: parent
-                color: Services.Colors.abyss
+                // transparent: the shared bgLayer blur shows through behind the
+                // padlock, instead of a black cover, during the intro
+                color: "transparent"
                 z: 100
                 opacity: 1.0
                 visible: !surface.introDone
