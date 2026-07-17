@@ -110,6 +110,10 @@ Scope {
                     surface.currentSecs = Qt.formatDateTime(now, "ss")
                     surface.currentDate = Qt.formatDateTime(now, "MMMM d, yyyy")
                     surface.currentDay = Qt.locale().dayName(now.getDay())
+                    // After resume the field can lose keyboard focus (mouse still
+                    // works). Re-grab it so the password is always typeable without
+                    // needing a click. No-op when it already has focus.
+                    if (!surface.unlocking && !passInput.activeFocus) passInput.forceActiveFocus()
                 }
             }
 
@@ -279,7 +283,7 @@ Scope {
                         Row {
                             spacing: 0
                             Text {
-                                text: surface.currentTime.split(" ")[0]
+                                text: surface.currentTime.split(" ")[0].split(":").slice(0, 2).join(":")
                                 color: Services.Colors.snow
                                 font.pixelSize: 104
                                 font.family: "JetBrainsMono NF"
@@ -356,10 +360,27 @@ Scope {
                                 required property var modelData
                                 spacing: 10
 
-                                Rectangle {
-                                    width: 6; height: 6; radius: 3
-                                    color: Services.Colors.ghost
-                                    y: 5
+                                // App icon (e.g. WhatsApp); falls back to the accent
+                                // dot when the notification carries no usable icon.
+                                Item {
+                                    width: 18; height: 18
+                                    y: 1
+                                    Image {
+                                        id: notifIcon
+                                        anchors.fill: parent
+                                        source: modelData.icon || ""
+                                        sourceSize.width: 36
+                                        sourceSize.height: 36
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        visible: status === Image.Ready
+                                    }
+                                    Rectangle {
+                                        anchors.centerIn: parent
+                                        width: 6; height: 6; radius: 3
+                                        color: Services.Colors.ghost
+                                        visible: notifIcon.status !== Image.Ready
+                                    }
                                 }
                                 Column {
                                     spacing: 1
@@ -474,6 +495,16 @@ Scope {
                                     : Services.Colors.ghostAlpha(0.25)
                                 border.width: 1
                                 Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                                // Click to (re)grab keyboard focus. Helps when the
+                                // field loses activeFocus (e.g. after resume) so the
+                                // user can recover it with the mouse instead of typing.
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.IBeamCursor
+                                    onClicked: passInput.forceActiveFocus()
+                                }
+
                                 RowLayout {
                                     anchors.fill: parent
                                     anchors.leftMargin: 18
