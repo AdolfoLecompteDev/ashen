@@ -47,21 +47,29 @@ Singleton {
 
     Process {
         id: signalProc
-        command: ["nmcli", "-t", "-e", "no", "-f", "SSID,SIGNAL", "dev", "wifi"]
+        // IN-USE marks the AP we're actually associated with ("*"). Its SIGNAL is
+        // the only reliable value: when several APs share the SSID (mesh/repeaters)
+        // the strongest visible one is NOT necessarily ours, so matching by name
+        // overstated the level. Its SSID is also the real network name — the
+        // CONNECTION field from `dev status` is the NM profile name, which gets a
+        // " 1" suffix on duplicate profiles (that stray "1" in the pill).
+        command: ["nmcli", "-t", "-e", "no", "-f", "IN-USE,SIGNAL,SSID", "dev", "wifi"]
         stdout: StdioCollector {
             onStreamFinished: {
-                let best = 0
+                let level = 0
                 for (let line of text.split("\n")) {
-                    const sep = line.lastIndexOf(":")
-                    if (sep < 1)
+                    if (line.charAt(0) !== "*")
                         continue
-                    if (line.substring(0, sep) !== root.wifiSsid)
+                    const f = line.split(":")
+                    if (f.length < 3)
                         continue
-                    const lvl = parseInt(line.substring(sep + 1)) || 0
-                    if (lvl > best)
-                        best = lvl
+                    level = parseInt(f[1]) || 0
+                    const ssid = f.slice(2).join(":").trim()
+                    if (ssid !== "")
+                        root.wifiSsid = ssid
+                    break
                 }
-                root.wifiSignal = best
+                root.wifiSignal = level
             }
         }
     }
