@@ -19,7 +19,9 @@ Scope {
             if (Services.AppState.launcherVisible) {
                 searchField.text = ""
                 searchField.forceActiveFocus()
-                if (win.allApps.length === 0) appLoader.running = true
+                // Rescan every open, not just the first: picks up installs/uninstalls
+                // without needing a shell restart. Guard against overlapping runs.
+                if (!appLoader.running) appLoader.running = true
             }
         }
     }
@@ -120,8 +122,9 @@ Scope {
         }
 
         // Apps are loaded in a single process (find + parse) instead of two sequential trips.
-        // Preloaded when quickshell starts (Scope's Component.onCompleted), so the list
-        // is already there the first time the launcher opens.
+        // Preloaded when quickshell starts (Scope's Component.onCompleted) so the list
+        // is already there the first time the launcher opens, then re-run on every
+        // subsequent open (toggle() above) to pick up installs/uninstalls since last scan.
         Process {
             id: appLoader
             command: ["sh", "-c",
