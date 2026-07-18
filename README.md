@@ -134,7 +134,7 @@ display manager or TTY.
 | `SUPER + T` | terminal |
 
 The keyboard layout pill in the bar is **read-only**. Layouts are declared in
-`hypr/.config/hypr/conf/input.lua` (`kb_layout = "latam,us"`) and switched from
+`hypr/.config/hypr/conf/input.lua` (`kb_layout = "us"`) and switched from
 **Settings → System → Keyboard**.
 
 ## Notes
@@ -150,7 +150,7 @@ The keyboard layout pill in the bar is **read-only**. Layouts are declared in
 
 ## Status
 
-1.1.3.
+1.1.3
 
 ## License
 
