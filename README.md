@@ -6,15 +6,6 @@ Hyprland · Quickshell · Kitty · Zsh + Powerlevel10k · PipeWire · matugen
 
 ---
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/bbf668fc-dec3-41fc-b85b-98f470968e3b" width="49%" />
-  <img src="https://github.com/user-attachments/assets/90688d3d-8a15-478d-bc21-243aa9ed7a71" width="49%" />
-</p>
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/2b3fd5b0-7691-42d9-9382-384ae500c49e" width="49%" />
-  <img src="https://github.com/user-attachments/assets/4d62fbea-c0a3-459a-af28-d8ee252774bd" width="49%" />
-</p>
-
 ## What's in it
 
 A Quickshell shell (`quickshell/`) providing the bar, the panels and the lock
