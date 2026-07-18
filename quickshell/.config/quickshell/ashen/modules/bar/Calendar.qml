@@ -25,7 +25,17 @@ PanelWindow {
     // The big clock stacks hour over minute, so the parts are kept separate
     // instead of split() off a formatted string -- under 24h there is no " AP"
     // to split on and the old surgery produced "undefined".
-    property string currentHour: Qt.formatDateTime(new Date(), Services.Prefs.hourToken)
+    // Qt's "hh"/"h" only mean 12-hour when an AP/ap token sits in the SAME
+    // format string; formatting the hour alone with "hh" silently yields 24h,
+    // so the 12/24 split is computed by hand to match the bar pill.
+    function hourText(d) {
+        if (Services.Prefs.clock24h)
+            return Qt.formatDateTime(d, "HH")
+        let h = d.getHours() % 12
+        if (h === 0) h = 12
+        return (h < 10 ? "0" : "") + h
+    }
+    property string currentHour: hourText(new Date())
     property string currentMinute: Qt.formatDateTime(new Date(), "mm")
     property string currentSecs: Qt.formatDateTime(new Date(), "ss")
     property string currentAmPm: Services.Prefs.clock24h ? "" : Qt.formatDateTime(new Date(), "AP")
@@ -38,7 +48,7 @@ PanelWindow {
         repeat: true
         onTriggered: {
             let now = new Date()
-            root.currentHour = Qt.formatDateTime(now, Services.Prefs.hourToken)
+            root.currentHour = root.hourText(now)
             root.currentMinute = Qt.formatDateTime(now, "mm")
             root.currentSecs = Qt.formatDateTime(now, "ss")
             root.currentAmPm = Services.Prefs.clock24h ? "" : Qt.formatDateTime(now, "AP")
