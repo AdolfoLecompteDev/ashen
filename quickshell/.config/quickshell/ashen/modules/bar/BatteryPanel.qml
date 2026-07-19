@@ -12,7 +12,12 @@ PanelWindow {
     // stays mapped through the close animation, so the exit plays in reverse
     readonly property bool shown: Services.AppState.batteryVisible
     visible: shown || closeDelay.running
-    Timer { id: closeDelay; interval: 300 }
+    // Reset the trace once the panel is fully hidden, so its stale full buffer
+    // isn't shown for a frame on the next open (which read as a full->empty jump).
+    Timer { id: closeDelay; interval: 300; onTriggered: battBox.frac = 0 }
+    // Holds the border sweep until the window has mapped and the card settled,
+    // so the whole 0->level trace is actually seen (see introSweep).
+    Timer { id: openDelay; interval: 260; onTriggered: introSweep.restart() }
 
     property string timeRemaining: "--"
     property var availableProfiles: []
@@ -21,7 +26,7 @@ PanelWindow {
     function refreshBattery() { battProc.running = true }
     function refreshProfiles() { profProc.running = true }
     onShownChanged: {
-        if (shown) { refreshBattery(); refreshProfiles() }
+        if (shown) { refreshBattery(); refreshProfiles(); battBox.frac = 0; openDelay.restart() }
         else closeDelay.restart()
     }
 
@@ -119,12 +124,35 @@ PanelWindow {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 120
 
-                // Animated fraction the canvas repaints from
-                property real frac: Services.Battery.level / 100
-                Behavior on frac { NumberAnimation { duration: 500; easing.type: Easing.OutCubic } }
+                // Live charge as a 0..1 fraction; `frac` is what the canvas
+                // actually strokes, so it can animate independently of the level.
+                property real target: Services.Battery.level / 100
+                property real frac: 0
                 onFracChanged: battCanvas.requestPaint()
                 onWidthChanged: battCanvas.requestPaint()
                 onHeightChanged: battCanvas.requestPaint()
+
+                // Entry sweep: trace the border from 0 up to the level. Started
+                // by win's openDelay timer (not directly on open) so the window
+                // has mapped and the card has settled first -- otherwise the
+                // first half of the sweep plays before the panel is on screen.
+                SequentialAnimation {
+                    id: introSweep
+                    PropertyAction { target: battBox; property: "frac"; value: 0 }
+                    NumberAnimation {
+                        target: battBox; property: "frac"
+                        to: battBox.target
+                        duration: 3200; easing.type: Easing.OutCubic
+                    }
+                }
+                // After the sweep, ease to live level changes (e.g. while charging).
+                onTargetChanged: if (win.shown && !introSweep.running) liveFrac.restart()
+                NumberAnimation {
+                    id: liveFrac
+                    target: battBox; property: "frac"
+                    to: battBox.target
+                    duration: 500; easing.type: Easing.OutCubic
+                }
 
                 Canvas {
                     id: battCanvas
@@ -132,13 +160,15 @@ PanelWindow {
                     onPaint: {
                         var ctx = getContext("2d")
                         ctx.reset()
-                        var lw = 5
+                        var lw = 7
                         var r = 22
                         var x = lw / 2, y = lw / 2
                         var w = width - lw, h = height - lw
+                        // Starts at the middle of the top edge so the accent
+                        // trace grows from top-centre (clockwise), not a corner.
                         function path() {
                             ctx.beginPath()
-                            ctx.moveTo(x + r, y)
+                            ctx.moveTo(x + w / 2, y)
                             ctx.lineTo(x + w - r, y)
                             ctx.arcTo(x + w, y, x + w, y + r, r)
                             ctx.lineTo(x + w, y + h - r)
@@ -147,6 +177,7 @@ PanelWindow {
                             ctx.arcTo(x, y + h, x, y + h - r, r)
                             ctx.lineTo(x, y + r)
                             ctx.arcTo(x, y, x + r, y, r)
+                            ctx.lineTo(x + w / 2, y)
                             ctx.closePath()
                         }
                         ctx.lineWidth = lw
