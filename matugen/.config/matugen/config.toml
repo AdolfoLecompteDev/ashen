@@ -12,6 +12,13 @@ output_path = "/home/adolf/.config/gtk-3.0/gtk.css"
 [templates.gtk4]
 input_path = "~/.config/matugen/templates/gtk4.css"
 output_path = "/home/adolf/.config/gtk-4.0/gtk.css"
+[templates.kitty]
+input_path = "~/.config/matugen/templates/kitty-colors.conf"
+output_path = "/home/adolf/.config/kitty/ashen-colors.conf"
+# Live-reload every open kitty from the file just written, so fastfetch/prompt
+# repaint without a restart. kitty appends -<pid> to the listen socket.
+post_hook = "sh -c 'for s in /tmp/kitty-ashen.sock-*; do [ -S \"$s\" ] && kitten @ --to \"unix:$s\" set-colors --all --configured /home/adolf/.config/kitty/ashen-colors.conf 2>/dev/null; done; true'"
+
 [templates.hypr_border]
 input_path = "~/.config/matugen/templates/border_color.template"
 output_path = "/home/adolf/.cache/matugen_border_color.txt"
