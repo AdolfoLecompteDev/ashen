@@ -114,6 +114,10 @@ apply_colors() {
     matugen image "$src" --mode dark --source-color-index 0 --type "$type"
 }
 
+# Pull the target still up-front: the video branch paints it as a bridge, and
+# both matugen and the lock screen need it regardless of colour mode.
+ensure_frame
+
 if is_video; then
     command -v mpvpaper >/dev/null || {
         echo "ashen-wallpaper: mpvpaper not installed (paru -S mpvpaper)" >&2
@@ -122,17 +126,27 @@ if is_video; then
 
     PLAY="$(optimized_video "$WALL")"
 
+    # Bridge the gap while mpvpaper spins up libmpv (~1s): paint the still frame
+    # first -- over whatever is currently showing -- then start the video on top
+    # of it, so the empty Hyprland background never flashes through. The frame is
+    # a still of this very clip, so the hand-off from still to motion is seamless.
+    if [ -f "$FRAME" ]; then
+        pgrep -x awww-daemon >/dev/null || { setsid awww-daemon >/dev/null 2>&1 < /dev/null & sleep 0.4; }
+        awww img "$FRAME" --transition-type random --transition-duration 0.6 --transition-fps 60 2>/dev/null
+    fi
     pkill -x mpvpaper 2>/dev/null
-    awww kill 2>/dev/null
     # mpvpaper only supports the libmpv vo, so no vo= here.
     # panscan fills the screen instead of letterboxing an odd aspect ratio.
     setsid mpvpaper -o "no-audio loop hwdec=auto panscan=1.0" ALL "$PLAY" >/dev/null 2>&1 < /dev/null &
+    # Drop the still bridge once mpvpaper has had time to draw its first frame
+    # (no clean signal for that, hence a fixed delay). Guarded on STATE so a
+    # quick re-switch to another wallpaper doesn't get its fresh awww killed.
+    ( sleep 1.5; [ "$(cat "$STATE" 2>/dev/null)" = "$WALL" ] && awww kill 2>/dev/null ) >/dev/null 2>&1 &
 else
     pkill -x mpvpaper 2>/dev/null
     pgrep -x awww-daemon >/dev/null || { setsid awww-daemon >/dev/null 2>&1 < /dev/null & sleep 0.4; }
     awww img "$WALL" --transition-type random --transition-duration 0.6 --transition-fps 60
 fi
 
-ensure_frame
 apply_colors
 printf '%s' "$WALL" > "$STATE"
