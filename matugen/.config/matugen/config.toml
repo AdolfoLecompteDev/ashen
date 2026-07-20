@@ -19,7 +19,10 @@ output_path = "/home/adolf/.config/kitty/ashen-colors.conf"
 # repaint without a restart. kitty appends -<pid> to the listen socket.
 post_hook = "sh -c 'for s in /tmp/kitty-ashen.sock-*; do [ -S \"$s\" ] && kitten @ --to \"unix:$s\" set-colors --all --configured /home/adolf/.config/kitty/ashen-colors.conf 2>/dev/null; done; true'"
 
+# Only writes the accent hex to the cache; the border is applied to Hyprland by
+# scripts/ashen-apply-border.sh (called from the wallpaper/recolor scripts),
+# because a matugen post_hook runs under Quickshell's env — no
+# HYPRLAND_INSTANCE_SIGNATURE — where hyprctl fails and aborts the hook.
 [templates.hypr_border]
 input_path = "~/.config/matugen/templates/border_color.template"
 output_path = "/home/adolf/.cache/matugen_border_color.txt"
-post_hook = "BORDER_HEX=$(cat /home/adolf/.cache/matugen_border_color.txt) && hyprctl eval \"hl.config({ general = { col = { active_border = { colors = {'rgba(${BORDER_HEX}ff)'} } } } })\" && sed -i \"s/active_border = { colors = {\\\"rgba([^)]*)\\\"} }/active_border = { colors = {\\\"rgba(${BORDER_HEX}ff)\\\"} }/\" /home/adolf/ashen/hypr/.config/hypr/conf/general.lua"

@@ -112,6 +112,7 @@ apply_colors() {
     local type
     type="$(cat "$CACHE/ashen_dynamic_type.txt" 2>/dev/null || echo scheme-tonal-spot)"
     matugen image "$src" --mode dark --source-color-index 0 --type "$type"
+    "$HOME/ashen/scripts/ashen-apply-border.sh"
 }
 
 # Pull the target still up-front: the video branch paints it as a bridge, and

@@ -23,4 +23,5 @@ esac
 [ -f "$src" ] || exit 0
 
 type="$(cat "$CACHE/ashen_dynamic_type.txt" 2>/dev/null || echo scheme-tonal-spot)"
-exec matugen image "$src" --mode dark --source-color-index 0 --type "$type"
+matugen image "$src" --mode dark --source-color-index 0 --type "$type"
+exec "$HOME/ashen/scripts/ashen-apply-border.sh"
