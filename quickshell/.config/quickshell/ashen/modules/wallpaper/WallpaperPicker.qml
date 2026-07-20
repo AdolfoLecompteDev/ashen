@@ -184,13 +184,15 @@ Scope {
         }
 
         // Categories, centered above the card band
-        Row {
-            id: tabs
+        Item {
+            id: tabsWrap
             anchors.bottom: band.top
             anchors.bottomMargin: 14
             anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 8
+            width: tabs.width
+            height: 32
             z: 30
+            property Item activeTab: null
 
             opacity: win.shown ? 1.0 : 0.0
             Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
@@ -198,6 +200,23 @@ Scope {
                 y: win.shown ? 0 : 16
                 Behavior on y { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
             }
+
+            // Sliding highlight behind the active tab (workspace-style)
+            Rectangle {
+                visible: tabsWrap.activeTab !== null
+                x: tabsWrap.activeTab ? tabsWrap.activeTab.x : 0
+                width: tabsWrap.activeTab ? tabsWrap.activeTab.width : 0
+                height: 32
+                radius: 10
+                color: Services.Colors.ghost
+                Behavior on x { SmoothedAnimation { duration: 250 } }
+                Behavior on width { SmoothedAnimation { duration: 220 } }
+            }
+
+            Row {
+            id: tabs
+            spacing: 8
+
 
             Repeater {
                 model: [
@@ -209,11 +228,13 @@ Scope {
                     required property var modelData
                     readonly property bool active: win.category === modelData.id
                     readonly property int count: modelData.id === "animated" ? win.animatedCount : win.staticCount
+                    onActiveChanged: if (active) tabsWrap.activeTab = this
+                    Component.onCompleted: if (active) tabsWrap.activeTab = this
 
                     height: 32
                     width: tabRow.implicitWidth + 22
                     radius: 10
-                    color: active ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.12)
+                    color: active ? "transparent" : Services.Colors.ghostAlpha(0.12)
 
                     Behavior on color { ColorAnimation { duration: 140 } }
 
@@ -246,6 +267,7 @@ Scope {
                     }
                 }
             }
+        }
         }
 
         // Message shown when the category is empty

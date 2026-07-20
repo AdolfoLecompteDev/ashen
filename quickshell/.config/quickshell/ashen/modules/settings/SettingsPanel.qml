@@ -83,6 +83,19 @@ Scope {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             width: 88
+            property Item activeCat: null
+
+            // Sliding highlight behind the active category (workspace-style)
+            Rectangle {
+                visible: sidebar.activeCat !== null
+                x: 12
+                y: 28 + (sidebar.activeCat ? sidebar.activeCat.y : 0)
+                width: sidebar.activeCat ? sidebar.activeCat.width : 0
+                height: 48
+                radius: 12
+                color: Services.Colors.ghost
+                Behavior on y { SmoothedAnimation { duration: 250 } }
+            }
 
             Column {
                 anchors.fill: parent
@@ -98,10 +111,13 @@ Scope {
                     model: win.categories
                     delegate: Rectangle {
                         required property var modelData
+                        readonly property bool active: Services.AppState.settingsTab === modelData.id
+                        onActiveChanged: if (active) sidebar.activeCat = this
+                        Component.onCompleted: if (active) sidebar.activeCat = this
                         width: parent.width
                         height: 48
                         radius: 12
-                        color: Services.AppState.settingsTab === modelData.id ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.08)
+                        color: active ? "transparent" : Services.Colors.ghostAlpha(0.08)
                         Behavior on color { ColorAnimation { duration: 150 } }
 
                         Text {
@@ -109,7 +125,7 @@ Scope {
                             text: modelData.icon
                             font.family: "Material Symbols Rounded"
                             font.pixelSize: 20
-                            color: Services.AppState.settingsTab === modelData.id ? Services.Colors.abyss : Services.Colors.mist
+                            color: active ? Services.Colors.abyss : Services.Colors.mist
                         }
 
                         MouseArea {
