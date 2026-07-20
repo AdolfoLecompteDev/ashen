@@ -132,7 +132,7 @@ PanelWindow {
                             Text {
                                 text: Services.Network.wifiSsid !== ""
                                       ? Services.Network.wifiSsid
-                                      : (Services.Network.ethConnection !== "" ? Services.Network.ethConnection : "Offline")
+                                      : (Services.Network.ethConnection !== "" ? Services.Network.ethDevice : "Offline")
                                 color: Services.Colors.snow
                                 font.pixelSize: 11
                                 font.bold: true

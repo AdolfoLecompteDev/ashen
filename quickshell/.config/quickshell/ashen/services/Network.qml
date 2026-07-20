@@ -8,35 +8,42 @@ Singleton {
     id: root
     property string wifiSsid: ""
     property int wifiSignal: 0
+    property bool wifiEnabled: false
     property string ethConnection: ""
+    property string ethDevice: ""
     readonly property bool online: wifiSsid !== "" || ethConnection !== ""
     property string btDevice: ""
     property bool btEnabled: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.enabled : false
 
     Process {
         id: wifiProc
-        command: ["nmcli", "-t", "-e", "no", "-f", "TYPE,STATE,CONNECTION", "dev", "status"]
+        command: ["nmcli", "-t", "-e", "no", "-f", "TYPE,STATE,DEVICE,CONNECTION", "dev", "status"]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
                 let ssid = ""
                 let eth = ""
+                let ethDev = ""
                 for (let line of text.split("\n")) {
                     const f = line.split(":")
-                    if (f.length < 3)
+                    if (f.length < 4)
                         continue
                     const type = f[0]
                     const state = f[1]
-                    const conn = f.slice(2).join(":").trim()
+                    const device = f[2]
+                    const conn = f.slice(3).join(":").trim()
                     if (!state.startsWith("connected") || conn === "")
                         continue
                     if (type === "wifi")
                         ssid = conn
-                    else if (type === "ethernet")
+                    else if (type === "ethernet") {
                         eth = conn
+                        ethDev = device
+                    }
                 }
                 root.wifiSsid = ssid
                 root.ethConnection = eth
+                root.ethDevice = ethDev
                 if (ssid !== "")
                     signalProc.running = true
                 else
@@ -74,11 +81,22 @@ Singleton {
         }
     }
 
+    // Radio power state, independent of whether we're associated to a network.
+    // Lets the pill tell "on but not connected" apart from "wifi off".
+    Process {
+        id: radioProc
+        command: ["nmcli", "-t", "radio", "wifi"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: root.wifiEnabled = text.trim() === "enabled"
+        }
+    }
+
     Timer {
         interval: 10000
         running: true
         repeat: true
-        onTriggered: wifiProc.running = true
+        onTriggered: { wifiProc.running = true; radioProc.running = true }
     }
 
     Process {
