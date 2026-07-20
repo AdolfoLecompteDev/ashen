@@ -46,11 +46,21 @@ Scope {
 
         // Command mode: active when the search starts with ">"
         property bool commandMode: searchText.startsWith(">")
+        onCommandModeChanged: swapFade.restart()
         property string commandQuery: commandMode ? searchText.substring(1).toLowerCase().trim() : ""
         property var commandActions: [
-            { id: "settings", icon: "\ue8b8", label: "Settings", action: "settings" },
-            { id: "record", icon: "\uf679", label: "Record", action: "record" },
-            { id: "theme", icon: "\ue40a", label: "Theme", action: "theme" },
+            { id: "settings",  icon: "\ue8b8", label: "Settings",        action: "settings" },
+            { id: "wallpaper", icon: "\ue1bc", label: "Wallpaper",       action: "wallpaper" },
+            { id: "theme",     icon: "\ue40a", label: "Theme",           action: "theme" },
+            { id: "clipboard", icon: "\ue14f", label: "Clipboard",       action: "clipboard" },
+            { id: "emoji",     icon: "\uea22", label: "Emoji",           action: "emoji" },
+            { id: "glyph",     icon: "\ue167", label: "Glyphs",          action: "glyph" },
+            { id: "record",    icon: "\uf679", label: "Record",          action: "record" },
+            { id: "processes", icon: "\ue322", label: "Processes",       action: "processes" },
+            { id: "lock",      icon: "\ue899", label: "Lock",            action: "lock" },
+            { id: "power",     icon: "\uf8c7", label: "Power",           action: "power" },
+            { id: "caffeine",  icon: "\uefef", label: "Keep Awake",      action: "caffeine" },
+            { id: "dnd",       icon: "\uf08f", label: "Do Not Disturb",  action: "dnd" },
         ]
         property var filteredCommands: {
             if (commandQuery.length === 0) return commandActions
@@ -73,13 +83,19 @@ Scope {
         }
         function runCommand(cmd) {
             Services.AppState.launcherVisible = false
-            if (cmd.action === "theme") {
-                Services.AppState.settingsTab = "theme"
-                Services.AppState.settingsVisible = true
-            } else if (cmd.action === "record") {
-                Services.AppState.toggleRecording()
-            } else if (cmd.action === "settings") {
-                Services.AppState.settingsVisible = true
+            switch (cmd.action) {
+                case "settings":  Services.AppState.settingsVisible = true; break
+                case "theme":     Services.AppState.settingsTab = "theme"; Services.AppState.settingsVisible = true; break
+                case "record":    Services.AppState.toggleRecording(); break
+                case "wallpaper": Services.AppState.wallpaperVisible = true; break
+                case "clipboard": Services.AppState.clipboardVisible = true; break
+                case "emoji":     Services.AppState.emojisVisible = true; break
+                case "glyph":     Services.AppState.glyphVisible = true; break
+                case "processes": Services.AppState.processVisible = true; break
+                case "power":     Services.AppState.powerMenuVisible = true; break
+                case "lock":      Quickshell.execDetached(["loginctl", "lock-session"]); break
+                case "caffeine":  Services.AppState.keepAwake = !Services.AppState.keepAwake; break
+                case "dnd":       Services.AppState.doNotDisturb = !Services.AppState.doNotDisturb; break
             }
         }
         function launchSelected() {
@@ -245,11 +261,10 @@ Scope {
                         spacing: 12
 
                         Text {
-                            text: win.commandMode ? ">" : "\ue8b6"
+                            text: "\ue8b6"
                             color: Services.Colors.ghost
-                            font.pixelSize: win.commandMode ? 20 : 22
-                            font.bold: win.commandMode
-                            font.family: win.commandMode ? "JetBrainsMono NF" : "Material Symbols Rounded"
+                            font.pixelSize: 22
+                            font.family: "Material Symbols Rounded"
                         }
 
                         Item {
@@ -298,47 +313,78 @@ Scope {
                     }
                 }
 
-                // Categorias (ocultas en modo comando)
-                RowLayout {
+                // Categorias -- indicador deslizante. En modo comando se desvanecen
+                // pero conservan su alto, para que el panel no cambie de tamaño.
+                Item {
+                    id: catSelect
                     width: parent.width
-                    spacing: 6
-                    visible: !win.commandMode
-                    height: visible ? 30 : 0
-                    Repeater {
-                        model: win.categories
-                        delegate: Rectangle {
-                       required property var modelData
-                       Layout.fillWidth: true
-                       height: 30
-                       radius: 8
-                       color: win.activeCategory === modelData.id ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.15)
-                       Behavior on color { ColorAnimation { duration: 150 } }
+                    height: 30
+                    opacity: win.commandMode ? 0 : 1
+                    enabled: !win.commandMode
+                    Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+                    property Item activeCat: null
 
-                       Text {
-                           anchors.fill: parent
-                           horizontalAlignment: Text.AlignHCenter
-                           verticalAlignment: Text.AlignVCenter
-                           text: modelData.icon
-                           color: win.activeCategory === modelData.id ? Services.Colors.abyss : Services.Colors.mist
-                           font.pixelSize: 16
-                           font.family: "Material Symbols Rounded"
-                       }
+                    // Sliding highlight behind the active category (workspace-style)
+                    Rectangle {
+                        visible: catSelect.activeCat !== null
+                        x: catSelect.activeCat ? catSelect.activeCat.x : 0
+                        width: catSelect.activeCat ? catSelect.activeCat.width : 0
+                        height: 30
+                        radius: 8
+                        color: Services.Colors.ghost
+                        Behavior on x { SmoothedAnimation { duration: 250 } }
+                    }
 
-                       MouseArea {
-                           anchors.fill: parent
-                           cursorShape: Qt.PointingHandCursor
-                           onClicked: win.activeCategory = modelData.id
-                       }
-                   }
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing: 6
+                        Repeater {
+                            model: win.categories
+                            delegate: Rectangle {
+                                required property var modelData
+                                readonly property bool active: win.activeCategory === modelData.id
+                                onActiveChanged: if (active) catSelect.activeCat = this
+                                Component.onCompleted: if (active) catSelect.activeCat = this
+                                Layout.fillWidth: true
+                                height: 30
+                                radius: 8
+                                color: active ? "transparent" : Services.Colors.ghostAlpha(0.15)
+                                Behavior on color { ColorAnimation { duration: 150 } }
+
+                                Text {
+                                    anchors.fill: parent
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    text: modelData.icon
+                                    color: active ? Services.Colors.abyss : Services.Colors.mist
+                                    font.pixelSize: 16
+                                    font.family: "Material Symbols Rounded"
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: win.activeCategory = modelData.id
+                                }
+                            }
+                        }
                     }
                 }
 
                 // List: apps or commands, depending on the mode
                 Rectangle {
+                    id: listBox
                     width: parent.width
                     height: 6 * 62
                     color: "transparent"
                     clip: true
+
+                    // Fade the content in when switching apps <-> commands.
+                    NumberAnimation {
+                        id: swapFade
+                        target: listBox; property: "opacity"
+                        from: 0.0; to: 1.0; duration: 180; easing.type: Easing.OutCubic
+                    }
 
                     ListView {
                         id: appList
