@@ -3,34 +3,13 @@ import Quickshell.Bluetooth
 import QtQuick
 import QtQuick.Layouts
 import "root:/services" as Services
+import "root:/modules/net" as Net
 
 Item {
     id: tab
     anchors.fill: parent
 
     property var adapter: Bluetooth.defaultAdapter
-
-    // BlueZ reports a freedesktop icon name ("audio-headset", "input-mouse"...).
-    // Map it to a Material Symbol so a device looks like what it is; anything
-    // unrecognised falls back to the generic devices_other.
-    // Order matters: "audio-headset" would match the "audio" test too.
-    function deviceGlyph(device) {
-        let n = (device && device.icon ? device.icon : "").toLowerCase()
-        if (n.indexOf("headset") !== -1) return "\ue311"
-        if (n.indexOf("headphone") !== -1) return "\uf01f"
-        if (n.indexOf("earbud") !== -1) return "\uf003"
-        if (n.indexOf("speaker") !== -1 || n.indexOf("audio") !== -1) return "\ue32d"
-        if (n.indexOf("mouse") !== -1) return "\ue323"
-        if (n.indexOf("keyboard") !== -1) return "\ue312"
-        if (n.indexOf("gaming") !== -1 || n.indexOf("joypad") !== -1) return "\ue338"
-        if (n.indexOf("phone") !== -1) return "\ue7ba"
-        if (n.indexOf("watch") !== -1) return "\ue334"
-        if (n.indexOf("computer") !== -1) return "\ue31e"
-        if (n.indexOf("printer") !== -1) return "\ue8ad"
-        if (n.indexOf("display") !== -1 || n.indexOf("tv") !== -1) return "\ue63b"
-        if (n.indexOf("car") !== -1) return "\ueff7"
-        return "\ue337"
-    }
 
     function startScan() {
         if (adapter && adapter.enabled && !adapter.discovering) {
@@ -153,73 +132,10 @@ Item {
             }
             Repeater {
                 model: tab.adapter ? tab.adapter.devices.values : []
-                delegate: Rectangle {
+                delegate: Net.BtDeviceRow {
                     required property var modelData
                     Layout.fillWidth: true
-                    height: 54
-                    radius: 8
-                    color: modelData.connected ? Services.Colors.ghostAlpha(0.2) : "transparent"
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 12
-                        anchors.rightMargin: 12
-                        spacing: 10
-                        Text {
-                            text: tab.deviceGlyph(modelData)
-                            color: modelData.connected ? Services.Colors.ghost : Services.Colors.mist
-                            font.pixelSize: 20
-                            font.family: "Material Symbols Rounded"
-                        }
-                        Column {
-                            Layout.fillWidth: true
-                            spacing: 2
-                            Text {
-                                text: modelData.name
-                                color: modelData.connected ? Services.Colors.snow : Services.Colors.mist
-                                font.pixelSize: 13
-                                font.family: "JetBrainsMono NF"
-                                font.bold: modelData.connected
-                                elide: Text.ElideRight
-                                width: parent.width
-                            }
-                            Text {
-                                text: modelData.pairing ? "Pairing..."
-                                    : modelData.connected ? "Connected"
-                                    : modelData.paired ? "Paired"
-                                    : "Available"
-                                color: modelData.connected ? Services.Colors.ghost : Services.Colors.ash
-                                font.pixelSize: 10
-                                font.family: "JetBrainsMono NF"
-                            }
-                        }
-                        Text {
-                            visible: modelData.connected
-                            text: ""
-                            color: Services.Colors.ghost
-                            font.pixelSize: 18
-                            font.family: "Material Symbols Rounded"
-                        }
-                    }
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        hoverEnabled: true
-                        enabled: !modelData.pairing
-                        onEntered: if (!modelData.connected) parent.color = Services.Colors.ghostAlpha(0.1)
-                        onExited: if (!modelData.connected) parent.color = "transparent"
-                        onClicked: {
-                            if (modelData.connected) {
-                                modelData.disconnect()
-                            } else if (modelData.paired) {
-                                modelData.connect()
-                            } else {
-                                // BlueZ rejects connect() without prior bonding
-                                modelData.trusted = true
-                                modelData.pair()
-                            }
-                        }
-                    }
+                    device: modelData
                 }
             }
         }

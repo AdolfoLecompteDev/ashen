@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 import "root:/services" as Services
+import "root:/modules/net" as Net
 
 PanelWindow {
     id: root
@@ -272,6 +273,31 @@ PanelWindow {
                                 font.family: "JetBrainsMono NF"
                             }
                         }
+                        // Forget the current network
+                        Rectangle {
+                            Layout.preferredWidth: 34
+                            Layout.preferredHeight: 34
+                            radius: 8
+                            color: "transparent"
+                            Text {
+                                anchors.centerIn: parent
+                                text: ""
+                                color: Services.Colors.ash
+                                font.pixelSize: 18
+                                font.family: "Material Symbols Rounded"
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                hoverEnabled: true
+                                onEntered: parent.color = Services.Colors.ghostAlpha(0.18)
+                                onExited: parent.color = "transparent"
+                                onClicked: {
+                                    Quickshell.execDetached(["nmcli", "connection", "delete", "id", Services.Network.wifiSsid])
+                                    root.refreshNetworks()
+                                }
+                            }
+                        }
                         Text {
                             text: ""
                             color: Services.Colors.ghost
@@ -311,60 +337,18 @@ PanelWindow {
                                 policy: knownList.contentHeight > knownList.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
                                 width: 4
                             }
-                            delegate: Rectangle {
+                            delegate: Net.WifiNetworkRow {
                                 required property var modelData
                                 width: knownList.width
-                                height: 54
-                                radius: 8
-                                color: "transparent"
-                                Behavior on color { ColorAnimation { duration: 150 } }
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: 12
-                                    anchors.rightMargin: 12
-                                    spacing: 10
-                                    Text {
-                                        text: modelData.signal >= 75 ? "" : modelData.signal >= 50 ? "" : modelData.signal >= 25 ? "" : ""
-                                        color: Services.Colors.mist
-                                        font.pixelSize: 20
-                                        font.family: "Material Symbols Rounded"
-                                    }
-                                    Column {
-                                        Layout.fillWidth: true
-                                        spacing: 2
-                                        Text {
-                                            text: modelData.ssid
-                                            color: Services.Colors.snow
-                                            font.pixelSize: 13
-                                            font.family: "JetBrainsMono NF"
-                                            elide: Text.ElideRight
-                                            width: parent.width
-                                        }
-                                        Text {
-                                            text: modelData.signal + "% signal"
-                                            color: Services.Colors.ash
-                                            font.pixelSize: 10
-                                            font.family: "JetBrainsMono NF"
-                                        }
-                                    }
-                                    Text {
-                                        visible: modelData.secure
-                                        text: ""
-                                        color: Services.Colors.ash
-                                        font.pixelSize: 14
-                                        font.family: "Material Symbols Rounded"
-                                    }
+                                net: modelData
+                                known: true
+                                onActivate: {
+                                    Quickshell.execDetached(["nmcli", "dev", "wifi", "connect", modelData.ssid])
+                                    Services.AppState.networkVisible = false
                                 }
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    hoverEnabled: true
-                                    onEntered: parent.color = Services.Colors.ghostAlpha(0.1)
-                                    onExited: parent.color = "transparent"
-                                    onClicked: {
-                                        Quickshell.execDetached(["nmcli", "dev", "wifi", "connect", modelData.ssid])
-                                        Services.AppState.networkVisible = false
-                                    }
+                                onForget: {
+                                    Quickshell.execDetached(["nmcli", "connection", "delete", "id", modelData.ssid])
+                                    root.refreshNetworks()
                                 }
                             }
                         }
@@ -400,62 +384,16 @@ PanelWindow {
                                 policy: availList.contentHeight > availList.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
                                 width: 4
                             }
-                            delegate: Rectangle {
+                            delegate: Net.WifiNetworkRow {
                                 required property var modelData
                                 width: availList.width
-                                height: 54
-                                radius: 8
-                                color: "transparent"
-                                Behavior on color { ColorAnimation { duration: 150 } }
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: 12
-                                    anchors.rightMargin: 12
-                                    spacing: 10
-                                    Text {
-                                        text: modelData.signal >= 75 ? "" : modelData.signal >= 50 ? "" : modelData.signal >= 25 ? "" : ""
-                                        color: Services.Colors.mist
-                                        font.pixelSize: 20
-                                        font.family: "Material Symbols Rounded"
-                                    }
-                                    Column {
-                                        Layout.fillWidth: true
-                                        spacing: 2
-                                        Text {
-                                            text: modelData.ssid
-                                            color: Services.Colors.snow
-                                            font.pixelSize: 13
-                                            font.family: "JetBrainsMono NF"
-                                            elide: Text.ElideRight
-                                            width: parent.width
-                                        }
-                                        Text {
-                                            text: modelData.signal + "% signal"
-                                            color: Services.Colors.ash
-                                            font.pixelSize: 10
-                                            font.family: "JetBrainsMono NF"
-                                        }
-                                    }
-                                    Text {
-                                        visible: modelData.secure
-                                        text: ""
-                                        color: Services.Colors.ash
-                                        font.pixelSize: 14
-                                        font.family: "Material Symbols Rounded"
-                                    }
-                                }
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    hoverEnabled: true
-                                    onEntered: parent.color = Services.Colors.ghostAlpha(0.1)
-                                    onExited: parent.color = "transparent"
-                                    onClicked: {
-                                        root.connectingTo = modelData.ssid
-                                        root.password = ""
-                                        root.showPassword = false
-                                        root.showConnectDialog = true
-                                    }
+                                net: modelData
+                                known: false
+                                onActivate: {
+                                    root.connectingTo = modelData.ssid
+                                    root.password = ""
+                                    root.showPassword = false
+                                    root.showConnectDialog = true
                                 }
                             }
                         }

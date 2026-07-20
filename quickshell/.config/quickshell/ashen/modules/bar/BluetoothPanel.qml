@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import "root:/services" as Services
+import "root:/modules/net" as Net
 
 PanelWindow {
     id: root
@@ -223,76 +224,10 @@ PanelWindow {
 
                 Repeater {
                     model: root.adapter ? root.adapter.devices.values : []
-                    delegate: Rectangle {
+                    delegate: Net.BtDeviceRow {
                         required property var modelData
                         width: panelCol.width
-                        height: 54
-                        radius: 8
-                        color: modelData.connected ? Services.Colors.ghostAlpha(0.2) : "transparent"
-                        Behavior on color { ColorAnimation { duration: 150 } }
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            spacing: 10
-
-                            Text {
-                                text: modelData.connected ? "" : ""
-                                color: modelData.connected ? Services.Colors.ghost : Services.Colors.mist
-                                font.pixelSize: 20
-                                font.family: "Material Symbols Rounded"
-                            }
-                            Column {
-                                Layout.fillWidth: true
-                                spacing: 2
-                                Text {
-                                    text: modelData.name
-                                    color: modelData.connected ? Services.Colors.snow : Services.Colors.mist
-                                    font.pixelSize: 13
-                                    font.family: "JetBrainsMono NF"
-                                    font.bold: modelData.connected
-                                    elide: Text.ElideRight
-                                    width: parent.width
-                                }
-                                Text {
-                                    text: modelData.pairing ? "Pairing..."
-                                        : modelData.connected ? "Connected"
-                                        : modelData.paired ? "Paired"
-                                        : "Available"
-                                    color: modelData.connected ? Services.Colors.ghost : Services.Colors.ash
-                                    font.pixelSize: 10
-                                    font.family: "JetBrainsMono NF"
-                                }
-                            }
-                            Text {
-                                visible: modelData.connected
-                                text: ""
-                                color: Services.Colors.ghost
-                                font.pixelSize: 18
-                                font.family: "Material Symbols Rounded"
-                            }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            hoverEnabled: true
-                            enabled: !modelData.pairing
-                            onEntered: if (!modelData.connected) parent.color = Services.Colors.ghostAlpha(0.1)
-                            onExited: if (!modelData.connected) parent.color = "transparent"
-                            onClicked: {
-                                if (modelData.connected) {
-                                    modelData.disconnect()
-                                } else if (modelData.paired) {
-                                    modelData.connect()
-                                } else {
-                                    // BlueZ rejects connect() without prior bonding
-                                    modelData.trusted = true
-                                    modelData.pair()
-                                }
-                            }
-                        }
+                        device: modelData
                     }
                 }
             }

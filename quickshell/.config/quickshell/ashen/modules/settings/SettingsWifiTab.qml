@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import "root:/services" as Services
+import "root:/modules/net" as Net
 
 Item {
     id: tab
@@ -103,7 +104,7 @@ Item {
                 color: "transparent"
                 Text {
                     anchors.centerIn: parent
-                    text: ""
+                    text: ""
                     color: Services.Colors.ghost
                     font.pixelSize: 16
                     font.family: "Material Symbols Rounded"
@@ -151,14 +152,39 @@ Item {
                 anchors.fill: parent
                 anchors.margins: 12
                 spacing: 10
-                Text { text: ""; color: Services.Colors.ghost; font.pixelSize: 22; font.family: "Material Symbols Rounded" }
+                Text { text: ""; color: Services.Colors.ghost; font.pixelSize: 22; font.family: "Material Symbols Rounded" }
                 Column {
                     Layout.fillWidth: true
                     spacing: 2
                     Text { text: Services.Network.wifiSsid; color: Services.Colors.snow; font.pixelSize: 14; font.family: "JetBrainsMono NF"; font.bold: true }
                     Text { text: "Connected"; color: Services.Colors.ghost; font.pixelSize: 11; font.family: "JetBrainsMono NF" }
                 }
-                Text { text: ""; color: Services.Colors.ghost; font.pixelSize: 22; font.family: "Material Symbols Rounded" }
+                // Forget the current network
+                Rectangle {
+                    Layout.preferredWidth: 34
+                    Layout.preferredHeight: 34
+                    radius: 8
+                    color: "transparent"
+                    Text {
+                        anchors.centerIn: parent
+                        text: ""
+                        color: Services.Colors.ash
+                        font.pixelSize: 18
+                        font.family: "Material Symbols Rounded"
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
+                        onEntered: parent.color = Services.Colors.ghostAlpha(0.18)
+                        onExited: parent.color = "transparent"
+                        onClicked: {
+                            Quickshell.execDetached(["nmcli", "connection", "delete", "id", Services.Network.wifiSsid])
+                            tab.refreshNetworks()
+                        }
+                    }
+                }
+                Text { text: ""; color: Services.Colors.ghost; font.pixelSize: 22; font.family: "Material Symbols Rounded" }
             }
         }
 
@@ -179,36 +205,15 @@ Item {
                     spacing: 2
                     clip: true
                     ScrollBar.vertical: ScrollBar { policy: knownList.contentHeight > knownList.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff; width: 4 }
-                    delegate: Rectangle {
+                    delegate: Net.WifiNetworkRow {
                         required property var modelData
                         width: knownList.width
-                        height: 54
-                        radius: 8
-                        color: "transparent"
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            spacing: 10
-                            Text { text: modelData.signal >= 75 ? "" : modelData.signal >= 50 ? "" : modelData.signal >= 25 ? "" : ""; color: Services.Colors.mist; font.pixelSize: 20; font.family: "Material Symbols Rounded" }
-                            Column {
-                                Layout.fillWidth: true
-                                spacing: 2
-                                Text { text: modelData.ssid; color: Services.Colors.snow; font.pixelSize: 13; font.family: "JetBrainsMono NF"; elide: Text.ElideRight; width: parent.width }
-                                Text { text: modelData.signal + "% signal"; color: Services.Colors.ash; font.pixelSize: 10; font.family: "JetBrainsMono NF" }
-                            }
-                            Text { visible: modelData.secure; text: ""; color: Services.Colors.ash; font.pixelSize: 14; font.family: "Material Symbols Rounded" }
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            hoverEnabled: true
-                            onEntered: parent.color = Services.Colors.ghostAlpha(0.1)
-                            onExited: parent.color = "transparent"
-                            onClicked: {
-                                Quickshell.execDetached(["nmcli", "dev", "wifi", "connect", modelData.ssid])
-                            }
+                        net: modelData
+                        known: true
+                        onActivate: Quickshell.execDetached(["nmcli", "dev", "wifi", "connect", modelData.ssid])
+                        onForget: {
+                            Quickshell.execDetached(["nmcli", "connection", "delete", "id", modelData.ssid])
+                            tab.refreshNetworks()
                         }
                     }
                 }
@@ -232,39 +237,16 @@ Item {
                     spacing: 2
                     clip: true
                     ScrollBar.vertical: ScrollBar { policy: availList.contentHeight > availList.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff; width: 4 }
-                    delegate: Rectangle {
+                    delegate: Net.WifiNetworkRow {
                         required property var modelData
                         width: availList.width
-                        height: 54
-                        radius: 8
-                        color: "transparent"
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            spacing: 10
-                            Text { text: modelData.signal >= 75 ? "" : modelData.signal >= 50 ? "" : modelData.signal >= 25 ? "" : ""; color: Services.Colors.mist; font.pixelSize: 20; font.family: "Material Symbols Rounded" }
-                            Column {
-                                Layout.fillWidth: true
-                                spacing: 2
-                                Text { text: modelData.ssid; color: Services.Colors.snow; font.pixelSize: 13; font.family: "JetBrainsMono NF"; elide: Text.ElideRight; width: parent.width }
-                                Text { text: modelData.signal + "% signal"; color: Services.Colors.ash; font.pixelSize: 10; font.family: "JetBrainsMono NF" }
-                            }
-                            Text { visible: modelData.secure; text: ""; color: Services.Colors.ash; font.pixelSize: 14; font.family: "Material Symbols Rounded" }
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            hoverEnabled: true
-                            onEntered: parent.color = Services.Colors.ghostAlpha(0.1)
-                            onExited: parent.color = "transparent"
-                            onClicked: {
-                                tab.connectingTo = modelData.ssid
-                                tab.password = ""
-                                tab.showPassword = false
-                                tab.showConnectDialog = true
-                            }
+                        net: modelData
+                        known: false
+                        onActivate: {
+                            tab.connectingTo = modelData.ssid
+                            tab.password = ""
+                            tab.showPassword = false
+                            tab.showConnectDialog = true
                         }
                     }
                 }
