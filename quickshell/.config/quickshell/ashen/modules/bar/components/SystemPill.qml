@@ -51,11 +51,15 @@ Rectangle {
         
         // Wifi
         Rectangle {
+            id: wifiPill
             height: root.innerH
             radius: root.innerR
             width: wifiInner.width + 16
-            color: Services.Network.online ? Services.Colors.ghost
-                                           : (wifiHover.containsMouse ? Services.Colors.ghostAlpha(0.4) : Services.Colors.ghostAlpha(0.2))
+            // Active (bright) whenever the radio is on -- connected or not --
+            // mirroring the bluetooth pill, which keys on btEnabled alone.
+            readonly property bool active: Services.Network.online || Services.Network.wifiEnabled
+            color: active ? Services.Colors.ghost
+                          : (wifiHover.containsMouse ? Services.Colors.ghostAlpha(0.4) : Services.Colors.ghostAlpha(0.2))
             Behavior on color { ColorAnimation { duration: 300 } }
 
             MouseArea {
@@ -75,15 +79,15 @@ Rectangle {
                 spacing: 5
                 Text {
                     text: Services.Network.wifiSsid !== "" ? (Services.Network.wifiSignal >= 75 ? "\ue1ba" : Services.Network.wifiSignal >= 50 ? "\uebe1" : Services.Network.wifiSignal >= 25 ? "\uebd6" : "\uebe4") : (Services.Network.ethConnection !== "" ? "\ueb2f" : (Services.Network.wifiEnabled ? "\ueb31" : "\ue1da"))
-                    color: (Services.Network.online || wifiHover.containsMouse) ? Services.Colors.abyss : Services.Colors.ash
+                    color: (wifiPill.active || wifiHover.containsMouse) ? Services.Colors.abyss : Services.Colors.ash
                     font.pixelSize: 18
                     font.family: "Material Symbols Rounded"
                     anchors.verticalCenter: parent.verticalCenter
                     Behavior on color { ColorAnimation { duration: 200 } }
                 }
                 Text {
-                    text: Services.Network.wifiSsid !== "" ? Services.Network.wifiSsid : (Services.Network.ethConnection !== "" ? Services.Network.ethDevice : (Services.Network.wifiEnabled ? "Encendido" : "Off"))
-                    color: (Services.Network.online || wifiHover.containsMouse) ? Services.Colors.abyss : Services.Colors.ash
+                    text: Services.Network.wifiSsid !== "" ? Services.Network.wifiSsid : (Services.Network.ethConnection !== "" ? Services.Network.ethDevice : (Services.Network.wifiEnabled ? "On" : "Off"))
+                    color: (wifiPill.active || wifiHover.containsMouse) ? Services.Colors.abyss : Services.Colors.ash
                     font.pixelSize: 12
                     font.family: "JetBrainsMono NF"
                     font.bold: true
