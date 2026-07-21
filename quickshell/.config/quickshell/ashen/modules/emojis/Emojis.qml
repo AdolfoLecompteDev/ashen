@@ -732,7 +732,7 @@ Scope {
 
         Rectangle {
             anchors.centerIn: parent
-            width: 560
+            width: 760
             height: 460
             radius: 16
             color: Services.Colors.surfaceAlpha(0.96)
@@ -809,30 +809,59 @@ Scope {
                     }
                 }
 
-                Flow {
+                // Categories as one sliding capsule (workspace-style); the Flow can
+                // wrap, so the indicator tracks the active chip on both x and y.
+                Item {
+                    id: catSelect
                     width: parent.width
-                    spacing: 6
-                    Repeater {
-                        model: win.categories
-                        delegate: Rectangle {
-                            required property string modelData
-                            height: 28
-                            width: catLabel.implicitWidth + 16
-                            radius: 8
-                            color: win.activeCategory === modelData ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.15)
-                            Behavior on color { ColorAnimation { duration: 150 } }
-                            Text {
-                                id: catLabel
-                                anchors.centerIn: parent
-                                text: modelData
-                                color: win.activeCategory === modelData ? Services.Colors.abyss : Services.Colors.mist
-                                font.pixelSize: 11
-                                font.family: "JetBrainsMono NF"
-                            }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: { win.activeCategory = modelData; win.selectedIndex = 0 }
+                    height: catFlow.height
+                    property Item activeCat: null
+
+                    Rectangle {
+                        visible: catSelect.activeCat !== null
+                        x: catSelect.activeCat ? catSelect.activeCat.x : 0
+                        y: catSelect.activeCat ? catSelect.activeCat.y : 0
+                        width: catSelect.activeCat ? catSelect.activeCat.width : 0
+                        height: 28
+                        radius: 8
+                        color: Services.Colors.ghost
+                        Behavior on x { SmoothedAnimation { duration: 250 } }
+                        Behavior on y { SmoothedAnimation { duration: 250 } }
+                        Behavior on width { SmoothedAnimation { duration: 220 } }
+                    }
+
+                    Flow {
+                        id: catFlow
+                        width: parent.width
+                        spacing: 6
+                        Repeater {
+                            model: win.categories
+                            delegate: Rectangle {
+                                required property string modelData
+                                readonly property bool active: win.activeCategory === modelData
+                                onActiveChanged: if (active) catSelect.activeCat = this
+                                Component.onCompleted: if (active) catSelect.activeCat = this
+                                height: 28
+                                width: catLabel.implicitWidth + 16
+                                radius: 8
+                                color: active ? "transparent"
+                                    : catHover.containsMouse ? Services.Colors.ghostAlpha(0.15) : "transparent"
+                                Behavior on color { ColorAnimation { duration: 150 } }
+                                Text {
+                                    id: catLabel
+                                    anchors.centerIn: parent
+                                    text: modelData
+                                    color: active ? Services.Colors.abyss : Services.Colors.mist
+                                    font.pixelSize: 11
+                                    font.family: "JetBrainsMono NF"
+                                }
+                                MouseArea {
+                                    id: catHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: { win.activeCategory = modelData; win.selectedIndex = 0 }
+                                }
                             }
                         }
                     }

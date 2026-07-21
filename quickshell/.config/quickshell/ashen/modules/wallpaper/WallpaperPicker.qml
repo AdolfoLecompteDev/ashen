@@ -234,7 +234,10 @@ Scope {
                     height: 32
                     width: tabRow.implicitWidth + 22
                     radius: 10
-                    color: active ? "transparent" : Services.Colors.ghostAlpha(0.12)
+                    // Only the sliding indicator carries the active fill;
+                    // idle tabs are bare (hover just brightens them).
+                    color: active ? "transparent"
+                        : tabHover.containsMouse ? Services.Colors.ghostAlpha(0.12) : "transparent"
 
                     Behavior on color { ColorAnimation { duration: 140 } }
 
@@ -261,7 +264,9 @@ Scope {
                     }
 
                     MouseArea {
+                        id: tabHover
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: win.category = parent.modelData.id
                     }

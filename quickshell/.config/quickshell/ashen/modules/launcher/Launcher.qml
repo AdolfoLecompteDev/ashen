@@ -348,7 +348,10 @@ Scope {
                                 Layout.fillWidth: true
                                 height: 30
                                 radius: 8
-                                color: active ? "transparent" : Services.Colors.ghostAlpha(0.15)
+                                // Only the sliding indicator carries the active fill;
+                                // idle slots are bare (hover just brightens them).
+                                color: active ? "transparent"
+                                    : catHover.containsMouse ? Services.Colors.ghostAlpha(0.15) : "transparent"
                                 Behavior on color { ColorAnimation { duration: 150 } }
 
                                 Text {
@@ -362,7 +365,9 @@ Scope {
                                 }
 
                                 MouseArea {
+                                    id: catHover
                                     anchors.fill: parent
+                                    hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: win.activeCategory = modelData.id
                                 }

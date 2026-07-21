@@ -117,7 +117,10 @@ Scope {
                         width: parent.width
                         height: 48
                         radius: 12
-                        color: active ? "transparent" : Services.Colors.ghostAlpha(0.08)
+                        // Only the sliding indicator carries the active fill;
+                        // idle slots are bare (hover just brightens them).
+                        color: active ? "transparent"
+                            : hoverArea.containsMouse ? Services.Colors.ghostAlpha(0.08) : "transparent"
                         Behavior on color { ColorAnimation { duration: 150 } }
 
                         Text {

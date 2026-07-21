@@ -321,7 +321,10 @@ PanelWindow {
                         Layout.fillWidth: true
                         height: 64
                         radius: 12
-                        color: active ? "transparent" : Services.Colors.ghostAlpha(0.12)
+                        // Only the sliding indicator carries the active fill;
+                        // idle slots are bare (hover just brightens them).
+                        color: active ? "transparent"
+                            : profHover.containsMouse ? Services.Colors.ghostAlpha(0.12) : "transparent"
                         opacity: available ? 1.0 : 0.35
                         Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -334,7 +337,9 @@ PanelWindow {
                         }
 
                         MouseArea {
+                            id: profHover
                             anchors.fill: parent
+                            hoverEnabled: parent.available
                             cursorShape: parent.available ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                             enabled: parent.available
                             onClicked: win.setProfile(modelData.id)

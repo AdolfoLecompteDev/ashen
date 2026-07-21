@@ -148,33 +148,58 @@ Scope {
                 anchors.margins: 16
                 spacing: 12
 
-                RowLayout {
+                // Tabs as one sliding capsule (workspace-style)
+                Item {
+                    id: tabSelect
                     width: parent.width
-                    spacing: 8
-                    Repeater {
-                        model: ["Nerd Font", "Material Icon"]
-                        delegate: Rectangle {
-                            required property string modelData
-                            height: 32
-                            Layout.fillWidth: true
-                            radius: 8
-                            color: win.activeTab === modelData ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.15)
-                            Behavior on color { ColorAnimation { duration: 150 } }
-                            Text {
-                                anchors.centerIn: parent
-                                text: modelData
-                                color: win.activeTab === modelData ? Services.Colors.abyss : Services.Colors.mist
-                                font.pixelSize: 12
-                                font.bold: true
-                                font.family: "JetBrainsMono NF"
-                            }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    win.activeTab = modelData
-                                    win.selectedIndex = 0
-                                    if (modelData === "Material Icon" && win.materialIcons.length === 0) materialLoader.running = true
+                    height: 32
+                    property Item activeTabItem: null
+
+                    Rectangle {
+                        visible: tabSelect.activeTabItem !== null
+                        x: tabSelect.activeTabItem ? tabSelect.activeTabItem.x : 0
+                        width: tabSelect.activeTabItem ? tabSelect.activeTabItem.width : 0
+                        height: 32
+                        radius: 8
+                        color: Services.Colors.ghost
+                        Behavior on x { SmoothedAnimation { duration: 250 } }
+                        Behavior on width { SmoothedAnimation { duration: 220 } }
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing: 8
+                        Repeater {
+                            model: ["Nerd Font", "Material Icon"]
+                            delegate: Rectangle {
+                                required property string modelData
+                                readonly property bool active: win.activeTab === modelData
+                                onActiveChanged: if (active) tabSelect.activeTabItem = this
+                                Component.onCompleted: if (active) tabSelect.activeTabItem = this
+                                height: 32
+                                Layout.fillWidth: true
+                                radius: 8
+                                color: active ? "transparent"
+                                    : tabHover.containsMouse ? Services.Colors.ghostAlpha(0.15) : "transparent"
+                                Behavior on color { ColorAnimation { duration: 150 } }
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: modelData
+                                    color: active ? Services.Colors.abyss : Services.Colors.mist
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    font.family: "JetBrainsMono NF"
+                                }
+                                MouseArea {
+                                    id: tabHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        win.activeTab = modelData
+                                        win.selectedIndex = 0
+                                        if (modelData === "Material Icon" && win.materialIcons.length === 0) materialLoader.running = true
+                                    }
                                 }
                             }
                         }
