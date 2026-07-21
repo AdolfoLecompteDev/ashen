@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -129,7 +130,7 @@ Scope {
 
         Rectangle {
             anchors.centerIn: parent
-            width: 720
+            width: 900
             height: 580
             radius: 16
             color: Services.Colors.surfaceAlpha(0.96)
@@ -151,54 +152,76 @@ Scope {
                 anchors.margins: 16
                 spacing: 12
 
-                RowLayout {
+                // Tabs as one sliding capsule (workspace-style); wipe sits at the end.
+                Item {
+                    id: tabSelect
                     width: parent.width
-                    Text { text: ""; font.family: "Material Symbols Rounded"; font.pixelSize: 20; color: Services.Colors.ghost }
-                    Text { text: "Clipboard"; color: Services.Colors.snow; font.pixelSize: 18; font.bold: true; font.family: "JetBrainsMono NF"; Layout.leftMargin: 6; Layout.fillWidth: true }
-                    Rectangle {
-                        width: 28; height: 28; radius: 8; color: "transparent"
-                        Text {
-                            anchors.centerIn: parent
-                            text: ""
-                            color: Services.Colors.ghost
-                            font.pixelSize: 20
-                            font.family: "Material Symbols Rounded"
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            hoverEnabled: true
-                            onEntered: parent.color = Services.Colors.ghostAlpha(0.15)
-                            onExited: parent.color = "transparent"
-                            onClicked: wipeProc.running = true
-                        }
-                    }
-                }
+                    height: 30
+                    property Item activeTabItem: null
 
-                RowLayout {
-                    width: parent.width
-                    spacing: 8
-                    Repeater {
-                        model: ["Text", "Images"]
-                        delegate: Rectangle {
-                            required property string modelData
-                            height: 30
-                            Layout.fillWidth: true
+                    Rectangle {
+                        visible: tabSelect.activeTabItem !== null
+                        x: tabSelect.activeTabItem ? tabSelect.activeTabItem.x : 0
+                        width: tabSelect.activeTabItem ? tabSelect.activeTabItem.width : 0
+                        height: 30
+                        radius: 8
+                        color: Services.Colors.ghost
+                        Behavior on x { SmoothedAnimation { duration: 250 } }
+                        Behavior on width { SmoothedAnimation { duration: 220 } }
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing: 8
+                        Repeater {
+                            model: ["Text", "Images"]
+                            delegate: Rectangle {
+                                required property string modelData
+                                readonly property bool active: win.activeTab === modelData
+                                onActiveChanged: if (active) tabSelect.activeTabItem = this
+                                Component.onCompleted: if (active) tabSelect.activeTabItem = this
+                                Layout.fillWidth: true
+                                height: 30
+                                radius: 8
+                                color: active ? "transparent"
+                                    : tabHover.containsMouse ? Services.Colors.ghostAlpha(0.12) : "transparent"
+                                Behavior on color { ColorAnimation { duration: 150 } }
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: modelData
+                                    color: active ? Services.Colors.abyss : Services.Colors.mist
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    font.family: "JetBrainsMono NF"
+                                }
+                                MouseArea {
+                                    id: tabHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: { win.activeTab = modelData; win.selectedIndex = 0 }
+                                }
+                            }
+                        }
+                        Rectangle {
+                            Layout.preferredWidth: 30
+                            Layout.preferredHeight: 30
                             radius: 8
-                            color: win.activeTab === modelData ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.12)
+                            color: wipeHover.containsMouse ? Services.Colors.ghostAlpha(0.15) : "transparent"
                             Behavior on color { ColorAnimation { duration: 150 } }
                             Text {
                                 anchors.centerIn: parent
-                                text: modelData
-                                color: win.activeTab === modelData ? Services.Colors.abyss : Services.Colors.mist
-                                font.pixelSize: 12
-                                font.bold: true
-                                font.family: "JetBrainsMono NF"
+                                text: "\uE16C"
+                                color: Services.Colors.ghost
+                                font.pixelSize: 18
+                                font.family: "Material Symbols Rounded"
                             }
                             MouseArea {
+                                id: wipeHover
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: { win.activeTab = modelData; win.selectedIndex = 0 }
+                                hoverEnabled: true
+                                onClicked: wipeProc.running = true
                             }
                         }
                     }
@@ -250,7 +273,8 @@ Scope {
 
                 Rectangle {
                     width: parent.width
-                    height: 380
+                    // fills the space the removed title header used to occupy
+                    height: 428
                     color: "transparent"
                     clip: true
 
@@ -339,17 +363,18 @@ Scope {
                                 anchors.rightMargin: 8
                                 spacing: 12
 
-                                Rectangle {
+                                // ClippingRectangle clips children to its rounded shape
+                                // (plain `clip` only clips to the square bounds, so the
+                                // image corners would poke past the frame).
+                                ClippingRectangle {
                                     Layout.preferredWidth: 132
                                     Layout.preferredHeight: 60
                                     radius: 8
                                     color: Services.Colors.ghostAlpha(0.15)
-                                    clip: true
                                     Image {
                                         anchors.fill: parent
-                                        anchors.margins: 3
                                         source: modelData.thumbPath !== "" ? "file://" + modelData.thumbPath : ""
-                                        fillMode: Image.PreserveAspectFit
+                                        fillMode: Image.PreserveAspectCrop
                                         visible: modelData.thumbPath !== "" && status === Image.Ready
                                         asynchronous: true
                                         cache: false
