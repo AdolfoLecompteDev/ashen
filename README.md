@@ -92,13 +92,14 @@ bash scripts/setup-system.sh
 
 `setup-system.sh` installs the packages, symlinks the configs with `stow`, creates
 the XDG folders, applies the GTK/icon/cursor settings and offers to enable the
-system services. It is safe to re-run. Flags:
+system services. It is safe to re-run — see [Update](#update). Flags:
 
 | Flag | Effect |
 |---|---|
 | `--no-packages` | skip installing anything |
 | `--no-stow` | skip symlinking the configs |
 | `--no-services` | skip `systemctl enable` |
+| `--no-pull` | skip the self-update (don't `git pull` the repo) |
 | `-y`, `--yes` | never prompt |
 
 To do it by hand instead:
@@ -123,6 +124,21 @@ display manager or TTY.
 > instead of `~/Pictures`), create the English ones too — the scripts expect
 > `~/Pictures/Wallpapers`, `~/Pictures/Screenshots` and `~/Videos` literally,
 > whatever the system language. `setup-system.sh` does this for you.
+
+## Update
+
+**To update Ashen, just re-run the setup:**
+
+```bash
+bash ~/ashen/scripts/setup-system.sh
+```
+
+It pulls the latest repo, and if anything changed it re-runs itself with the new
+version — so new configs **and** any new packages they need are applied in one
+pass (a `git pull` alone can leave the shell half-updated and broken). It also
+refreshes Oh My Zsh + Powerlevel10k + plugins and reloads Quickshell. Nothing is
+reinstalled if it's already current. The self-update is skipped automatically if
+you have local changes in the repo (pass `--no-pull` to force-skip it).
 
 ## Usage
 
