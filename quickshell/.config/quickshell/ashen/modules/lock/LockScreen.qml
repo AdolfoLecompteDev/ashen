@@ -125,7 +125,8 @@ Scope {
             }
             Process {
                 id: chargeProc
-                command: ["sh", "-c", "cat /sys/class/power_supply/AC0/online"]
+                // Adapter name varies (AC0/ADP1/…); read whichever exposes `online`.
+                command: ["sh", "-c", "cat /sys/class/power_supply/A*/online 2>/dev/null | grep -q 1 && echo 1 || echo 0"]
                 running: true
                 stdout: StdioCollector { onStreamFinished: surface.charging = text.trim() === "1" }
             }
@@ -986,17 +987,23 @@ Scope {
                                 spacing: 4
                                 Text {
                                     text: surface.charging ? "\uE1A3" : surface.battery >= 90 ? "\uE1A5" : surface.battery >= 50 ? "\uF0A1" : surface.battery >= 20 ? "\uF09F" : "\uE19C"
-                                    color: surface.battery < 20 && !surface.charging ? Services.Colors.error_ : Services.Colors.mist
+                                    // Charging = accent (ghost) so the state reads at a glance;
+                                    // error_ only for a genuinely low battery on its own power.
+                                    color: surface.charging ? Services.Colors.ghost
+                                        : surface.battery < 20 ? Services.Colors.error_ : Services.Colors.mist
                                     font.pixelSize: 18
                                     font.family: "Material Symbols Rounded"
                                     anchors.verticalCenter: parent.verticalCenter
+                                    Behavior on color { ColorAnimation { duration: 150 } }
                                 }
                                 Text {
                                     text: surface.battery + "%"
-                                    color: surface.battery < 20 && !surface.charging ? Services.Colors.error_ : Services.Colors.mist
+                                    color: surface.charging ? Services.Colors.ghost
+                                        : surface.battery < 20 ? Services.Colors.error_ : Services.Colors.mist
                                     font.pixelSize: 12
                                     font.family: "JetBrainsMono NF"
                                     anchors.verticalCenter: parent.verticalCenter
+                                    Behavior on color { ColorAnimation { duration: 150 } }
                                 }
                             }
                             MouseArea {
@@ -1008,11 +1015,18 @@ Scope {
                             }
                         }
 
-                        Row {
+                        // Profiles as a single capsule (like the bar workspaces): one
+                        // pill holds the three icons, with a sliding accent indicator
+                        // behind the active one — instead of three separate tiles.
+                        Rectangle {
+                            id: profileCapsule
                             anchors.right: batteryPill.left
                             anchors.rightMargin: 8
                             anchors.verticalCenter: batteryPill.verticalCenter
-                            spacing: 6
+                            height: 44
+                            radius: 10
+                            color: Services.Colors.surfaceAlpha(0.85)
+                            width: profRow.width + 16
                             opacity: surface.showProfiles ? 1.0 : 0.0
                             visible: opacity > 0
                             // Same deploy as the system (bar) panels: fade + slide in
@@ -1022,35 +1036,73 @@ Scope {
                                 x: surface.showProfiles ? 0 : 12
                                 Behavior on x { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
                             }
-                            Repeater {
-                                model: [
-                                    { id: "power-saver", icon: "\uEC1A" },
-                                    { id: "balanced", icon: "\uEAF6" },
-                                    { id: "performance", icon: "\uEB9B" },
-                                ]
-                                delegate: Rectangle {
+
+                            readonly property var profModel: [
+                                { id: "power-saver", icon: "" },
+                                { id: "balanced", icon: "" },
+                                { id: "performance", icon: "" },
+                            ]
+                            readonly property int activeIdx: {
+                                for (let i = 0; i < profModel.length; i++)
+                                    if (profModel[i].id === surface.activeProfile) return i
+                                return -1
+                            }
+
+                            // Sliding accent indicator behind the active profile
+                            Rectangle {
+                                id: profSlide
+                                width: 34; height: 34; radius: 8
+                                color: Services.Colors.ghost
+                                y: (parent.height - height) / 2
+                                x: 8 + profileCapsule.activeIdx * (34 + 4)
+                                opacity: profileCapsule.activeIdx >= 0 ? 1 : 0
+                                Behavior on opacity { NumberAnimation { duration: 200 } }
+                                Behavior on x { SmoothedAnimation { duration: 250 } }
+                            }
+
+                            Row {
+                                id: profRow
+                                anchors.centerIn: parent
+                                spacing: 4
+                                Repeater {
+                                    model: profileCapsule.profModel
+                                    delegate: Item {
                                     id: profItem
                                     required property var modelData
                                     property bool available: surface.availableProfiles.includes(modelData.id)
-                                    width: 38; height: 38
-                                    radius: 8
-                                    color: surface.activeProfile === modelData.id ? Services.Colors.ghost : Services.Colors.surfaceAlpha(0.85)
+                                    property bool isActive: surface.activeProfile === modelData.id
+                                    width: 34; height: 34
                                     opacity: available ? 1.0 : 0.3
-                                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                                    // Hover brightens available, non-active slots
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        radius: 8
+                                        color: Services.Colors.ghost
+                                        opacity: profHover.containsMouse && profItem.available && !profItem.isActive ? 0.2 : 0
+                                        Behavior on opacity { NumberAnimation { duration: 150 } }
+                                    }
+
                                     Text {
                                         anchors.centerIn: parent
                                         text: profItem.modelData.icon
                                         font.family: "Material Symbols Rounded"
                                         font.pixelSize: 16
-                                        color: surface.activeProfile === profItem.modelData.id ? Services.Colors.abyss : Services.Colors.mist
+                                        color: profItem.isActive ? Services.Colors.abyss : Services.Colors.mist
+                                        z: 1
+                                        Behavior on color { ColorAnimation { duration: 200 } }
                                     }
+
                                     MouseArea {
+                                        id: profHover
                                         anchors.fill: parent
+                                        hoverEnabled: true
                                         cursorShape: profItem.available ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                         enabled: profItem.available
                                         onClicked: surface.setProfile(profItem.modelData.id)
                                     }
                                 }
+                            }
                             }
                         }
                     }
