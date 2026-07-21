@@ -1,3 +1,4 @@
+// Ashen — Network service (Wi-Fi/eth/BT state via nmcli).  by Adolf — github.com/AdolfLecompte
 pragma Singleton
 import Quickshell
 import Quickshell.Io
@@ -14,6 +15,11 @@ Singleton {
     readonly property bool online: wifiSsid !== "" || ethConnection !== ""
     property string btDevice: ""
     property bool btEnabled: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.enabled : false
+
+    // Force an immediate re-poll instead of waiting for the 10s Timer -- callers
+    // that just changed radio state (the Wi-Fi toggle) use this so the pill/panel
+    // reconcile in ~1s rather than lagging up to a full poll interval behind.
+    function refresh() { wifiProc.running = true; radioProc.running = true }
 
     Process {
         id: wifiProc

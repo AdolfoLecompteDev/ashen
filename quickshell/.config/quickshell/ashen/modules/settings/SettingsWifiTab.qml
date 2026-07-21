@@ -10,7 +10,6 @@ Item {
     id: tab
     anchors.fill: parent
 
-    property bool wifiEnabled: true
     property var networks: []
     property var knownNetworks: []
     property string connectingTo: ""
@@ -21,6 +20,27 @@ Item {
     function refreshNetworks() {
         scanProc.running = true
         knownProc.running = true
+    }
+
+    // Olvidar una red por SSID. El nombre del perfil de NetworkManager NO siempre
+    // es el SSID: ante duplicados NM crea "SSID 1", "SSID 2"… así que
+    // `connection delete id <ssid>` falla silenciosamente para esos perfiles
+    // (justo los de las redes a las que ya te conectaste). Resolvemos SSID→perfil
+    // recorriendo los perfiles wifi y borrando todos los que matcheen.
+    // sh -c con el SSID como $1 (argv, no interpolado) evita inyección de shell.
+    function forgetSsid(ssid) {
+        forgetProc.ssid = ssid
+        forgetProc.running = true
+    }
+
+    Process {
+        id: forgetProc
+        property string ssid: ""
+        running: false
+        command: ["sh", "-c",
+            'nmcli -t -f NAME,TYPE connection show | while IFS=: read -r n t; do [ "$t" = 802-11-wireless ] || continue; s=$(nmcli -g 802-11-wireless.ssid connection show "$n"); [ "$s" = "$1" ] && nmcli connection delete "$n"; done',
+            "_", ssid]
+        onExited: tab.refreshNetworks()
     }
 
     Component.onCompleted: refreshNetworks()
@@ -60,7 +80,11 @@ Item {
 
     Process {
         id: knownProc
-        command: ["nmcli", "-t", "-f", "name", "connection", "show"]
+        // Emitimos el SSID de cada perfil wifi guardado (NO el nombre del perfil,
+        // que puede ser "SSID 1"). Así la clasificación known/available compara
+        // SSID contra SSID y las redes ya guardadas caen en "Known Networks".
+        command: ["sh", "-c",
+            'nmcli -t -f NAME,TYPE connection show | while IFS=: read -r n t; do [ "$t" = 802-11-wireless ] || continue; nmcli -g 802-11-wireless.ssid connection show "$n"; done']
         running: false
         stdout: StdioCollector {
             onStreamFinished: {
@@ -74,6 +98,15 @@ Item {
         running: true
         repeat: true
         onTriggered: tab.refreshNetworks()
+    }
+
+    // After a radio toggle, re-poll once nmcli has actually flipped the radio, so
+    // the optimistic state is confirmed (or corrected) and, on turn-on, networks
+    // reappear without waiting for the 15s scan.
+    Timer {
+        id: wifiSettleTimer
+        interval: 1500
+        onTriggered: { Services.Network.refresh(); tab.refreshNetworks() }
     }
 
     ColumnLayout {
@@ -120,21 +153,30 @@ Item {
             }
             Rectangle {
                 width: 52; height: 28; radius: 14
-                color: tab.wifiEnabled ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.25)
+                color: Services.Network.wifiEnabled ? Services.Colors.ghost : Services.Colors.ghostAlpha(0.25)
                 Behavior on color { ColorAnimation { duration: 200 } }
                 Rectangle {
                     width: 20; height: 20; radius: 10
                     color: Services.Colors.snow
                     anchors.verticalCenter: parent.verticalCenter
-                    x: tab.wifiEnabled ? parent.width - width - 4 : 4
+                    x: Services.Network.wifiEnabled ? parent.width - width - 4 : 4
                     Behavior on x { NumberAnimation { duration: 200 } }
                 }
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        tab.wifiEnabled = !tab.wifiEnabled
-                        Quickshell.execDetached(["sh", "-c", tab.wifiEnabled ? "nmcli radio wifi on" : "nmcli radio wifi off"])
+                        let turnOn = !Services.Network.wifiEnabled
+                        // Optimistic: flip the pill/panel and empty the list NOW so
+                        // there's no ~6s lag waiting for the service's 10s poll.
+                        Services.Network.wifiEnabled = turnOn
+                        if (!turnOn) {
+                            tab.networks = []
+                            Services.Network.wifiSsid = ""
+                            Services.Network.wifiSignal = 0
+                        }
+                        Quickshell.execDetached(["sh", "-c", turnOn ? "nmcli radio wifi on" : "nmcli radio wifi off"])
+                        wifiSettleTimer.restart()   // reconcile with reality shortly
                     }
                 }
             }
@@ -178,10 +220,7 @@ Item {
                         hoverEnabled: true
                         onEntered: parent.color = Services.Colors.ghostAlpha(0.18)
                         onExited: parent.color = "transparent"
-                        onClicked: {
-                            Quickshell.execDetached(["nmcli", "connection", "delete", "id", Services.Network.wifiSsid])
-                            tab.refreshNetworks()
-                        }
+                        onClicked: tab.forgetSsid(Services.Network.wifiSsid)
                     }
                 }
                 Text { text: ""; color: Services.Colors.ghost; font.pixelSize: 22; font.family: "Material Symbols Rounded" }
@@ -211,10 +250,7 @@ Item {
                         net: modelData
                         known: true
                         onActivate: Quickshell.execDetached(["nmcli", "dev", "wifi", "connect", modelData.ssid])
-                        onForget: {
-                            Quickshell.execDetached(["nmcli", "connection", "delete", "id", modelData.ssid])
-                            tab.refreshNetworks()
-                        }
+                        onForget: tab.forgetSsid(modelData.ssid)
                     }
                 }
             }
