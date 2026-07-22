@@ -222,11 +222,20 @@ PanelWindow {
                     leftPadding: 4
                 }
 
-                Repeater {
+                // Cap at 5 rows (row 54 + spacing 4); scroll if there are more.
+                ListView {
+                    id: btList
+                    width: parent.width
+                    readonly property int rowH: 54
+                    readonly property int gap: 4
+                    height: Math.min(count, 5) * rowH + Math.max(count - 1, 0) * gap
+                    spacing: gap
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
                     model: root.adapter ? root.adapter.devices.values : []
                     delegate: Net.BtDeviceRow {
                         required property var modelData
-                        width: panelCol.width
+                        width: btList.width
                         device: modelData
                     }
                 }
