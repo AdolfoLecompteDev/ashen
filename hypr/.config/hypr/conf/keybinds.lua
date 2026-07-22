@@ -38,6 +38,10 @@ hl.bind(mod .. " + right", hl.dsp.focus({ direction = "right" }))
 hl.bind(mod .. " + up",    hl.dsp.focus({ direction = "up"    }))
 hl.bind(mod .. " + down",  hl.dsp.focus({ direction = "down"  }))
 
+-- Cycle workspaces (SUPER + CTRL + arrows): right = +1, left = -1
+hl.bind(mod .. " + CTRL + right", hl.dsp.focus({ workspace = "e+1" }))
+hl.bind(mod .. " + CTRL + left",  hl.dsp.focus({ workspace = "e-1" }))
+
 -- Workspaces and moving windows
 for i = 1, 9 do
     hl.bind(mod .. " + " .. i,           hl.dsp.focus({ workspace = i }))
