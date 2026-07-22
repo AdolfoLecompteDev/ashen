@@ -125,9 +125,35 @@ if [[ $DO_PACKAGES -eq 1 ]]; then
             || warn "Could not remove PulseAudio automatically — remove it by hand, then re-run."
     fi
 
+    # A single `pacman -S` is one atomic transaction: if ANY package conflicts
+    # (a renamed target, an AUR -git variant, or a base package like pipewire
+    # that a distro like CachyOS ships as a newer -1.1 rebuild the plain repo
+    # would "downgrade"), the whole batch aborts and NOTHING installs. So try
+    # the fast batch first, and if it fails, fall back to installing each
+    # package on its own -- the good ones still land, only the genuinely
+    # conflicting ones are skipped and reported.
+    install_each() {   # helper-cmd  pkg...
+        local cmd="$1"; shift
+        local failed=()
+        local p
+        for p in "$@"; do
+            # shellcheck disable=SC2086
+            $cmd --needed --noconfirm "$p" >/dev/null 2>&1 || failed+=("$p")
+        done
+        if [[ ${#failed[@]} -gt 0 ]]; then
+            warn "Could not install: ${failed[*]}"
+            warn "Often these are base packages already present (e.g. pipewire) that"
+            warn "a local version pin blocks -- safe to ignore if the shell starts."
+            warn "Install any genuine misses by hand."
+        fi
+    }
+
     say "Installing packages from the official repos..."
-    sudo pacman -S --needed --noconfirm "${PKGS_OFFICIAL[@]}" \
-        || warn "pacman failed on some packages — check the list above"
+    if ! sudo pacman -S --needed --noconfirm "${PKGS_OFFICIAL[@]}"; then
+        warn "Batch install hit a conflict -- retrying package by package so one"
+        warn "bad package can't block the rest..."
+        install_each "sudo pacman -S" "${PKGS_OFFICIAL[@]}"
+    fi
 
     AUR_HELPER=""
     for h in paru yay pikaur trizen; do
@@ -136,8 +162,10 @@ if [[ $DO_PACKAGES -eq 1 ]]; then
 
     if [[ -n "$AUR_HELPER" ]]; then
         say "Installing AUR packages with $AUR_HELPER..."
-        "$AUR_HELPER" -S --needed --noconfirm "${PKGS_AUR[@]}" \
-            || warn "$AUR_HELPER failed on some packages — check the list above"
+        if ! "$AUR_HELPER" -S --needed --noconfirm "${PKGS_AUR[@]}"; then
+            warn "Batch install hit a conflict -- retrying package by package..."
+            install_each "$AUR_HELPER -S" "${PKGS_AUR[@]}"
+        fi
     else
         warn "No AUR helper found (paru/yay/pikaur/trizen)."
         warn "Install these by hand or the shell will not start:"
