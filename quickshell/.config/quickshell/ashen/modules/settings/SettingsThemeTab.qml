@@ -163,10 +163,10 @@ Item {
         let b64 = Qt.btoa(json)
         let borderHex = c.ghost.replace("#", "") + "ff"
         Quickshell.execDetached(["sh", "-c",
-            "echo '" + b64 + "' | base64 -d > /home/adolf/.cache/ashen_scheme.json && " +
-            "echo '" + schemeId + "' > /home/adolf/.cache/ashen_scheme_mode.txt && " +
+            "echo '" + b64 + "' | base64 -d > \"$HOME/.cache/ashen_scheme.json\" && " +
+            "echo '" + schemeId + "' > \"$HOME/.cache/ashen_scheme_mode.txt\" && " +
             "hyprctl eval \"hl.config({ general = { col = { active_border = { colors = {'rgba(" + borderHex + ")'} } } } })\" && " +
-            "sed -i 's/active_border = { colors = {\"rgba([^)]*)\"} }/active_border = { colors = {\"rgba(" + borderHex + ")\"} }/' /home/adolf/ashen/hypr/.config/hypr/conf/general.lua"
+            "sed -i 's/active_border = { colors = {\"rgba([^)]*)\"} }/active_border = { colors = {\"rgba(" + borderHex + ")\"} }/' \"$HOME/.config/hypr/conf/general.lua\""
         ])
         tab.applyGtkTheme(c)
         tab.applyKittyTheme(c)
@@ -213,13 +213,13 @@ Item {
 
     function applyP10kTheme(c) {
         Quickshell.execDetached(["sh", "-c",
-            "sed -i \"s/^  local grey=.*/  local grey='" + c.mist + "'/\" /home/adolf/.p10k.zsh && " +
-            "sed -i \"s/^  local red=.*/  local red='" + c.error_ + "'/\" /home/adolf/.p10k.zsh && " +
-            "sed -i \"s/^  local yellow=.*/  local yellow='" + c.neutral + "'/\" /home/adolf/.p10k.zsh && " +
-            "sed -i \"s/^  local blue=.*/  local blue='" + c.ghost + "'/\" /home/adolf/.p10k.zsh && " +
-            "sed -i \"s/^  local magenta=.*/  local magenta='" + c.ghost + "'/\" /home/adolf/.p10k.zsh && " +
-            "sed -i \"s/^  local cyan=.*/  local cyan='" + c.shade + "'/\" /home/adolf/.p10k.zsh && " +
-            "sed -i \"s/^  local white=.*/  local white='" + c.snow + "'/\" /home/adolf/.p10k.zsh && " +
+            "sed -i \"s/^  local grey=.*/  local grey='" + c.mist + "'/\" \"$HOME/.p10k.zsh\" && " +
+            "sed -i \"s/^  local red=.*/  local red='" + c.error_ + "'/\" \"$HOME/.p10k.zsh\" && " +
+            "sed -i \"s/^  local yellow=.*/  local yellow='" + c.neutral + "'/\" \"$HOME/.p10k.zsh\" && " +
+            "sed -i \"s/^  local blue=.*/  local blue='" + c.ghost + "'/\" \"$HOME/.p10k.zsh\" && " +
+            "sed -i \"s/^  local magenta=.*/  local magenta='" + c.ghost + "'/\" \"$HOME/.p10k.zsh\" && " +
+            "sed -i \"s/^  local cyan=.*/  local cyan='" + c.shade + "'/\" \"$HOME/.p10k.zsh\" && " +
+            "sed -i \"s/^  local white=.*/  local white='" + c.snow + "'/\" \"$HOME/.p10k.zsh\" && " +
             "for s in " + tab.kittySockets + "; do kitten @ --to \"unix:$s\" send-text --match all $'source ~/.p10k.zsh\r' 2>/dev/null; done"
         ])
     }
@@ -318,8 +318,8 @@ Item {
         let b64 = Qt.btoa(css)
         let papirusCmd = c.papirusColor ? ("papirus-folders -C " + c.papirusColor + " 2>/dev/null; ") : ""
         Quickshell.execDetached(["sh", "-c",
-            "mkdir -p /home/adolf/.config/gtk-3.0 && " +
-            "echo '" + b64 + "' | base64 -d > /home/adolf/.config/gtk-3.0/gtk.css && " +
+            "mkdir -p \"$HOME/.config/gtk-3.0\" && " +
+            "echo '" + b64 + "' | base64 -d > \"$HOME/.config/gtk-3.0/gtk.css\" && " +
             papirusCmd
         ])
     }
@@ -395,7 +395,7 @@ Item {
 
         Process {
             id: schemeModeReadProc
-            command: ["sh", "-c", "cat /home/adolf/.cache/ashen_scheme_mode.txt 2>/dev/null"]
+            command: ["sh", "-c", "cat \"$HOME/.cache/ashen_scheme_mode.txt\" 2>/dev/null"]
             running: false
             stdout: StdioCollector {
                 onStreamFinished: {
@@ -424,7 +424,7 @@ Item {
         }
         Process {
             id: dynTypeProc
-            command: ["sh", "-c", "cat /home/adolf/.cache/ashen_dynamic_type.txt 2>/dev/null"]
+            command: ["sh", "-c", "cat \"$HOME/.cache/ashen_dynamic_type.txt\" 2>/dev/null"]
             running: false
             stdout: StdioCollector {
                 onStreamFinished: {
@@ -442,7 +442,7 @@ Item {
         }
         function setDynamicType(t) {
             schemeSection.dynamicType = t
-            Quickshell.execDetached(["sh", "-c", "echo '" + t + "' > /home/adolf/.cache/ashen_dynamic_type.txt"])
+            Quickshell.execDetached(["sh", "-c", "echo '" + t + "' > \"$HOME/.cache/ashen_dynamic_type.txt\""])
         }
 
         // Re-run matugen from the current wallpaper (frame for gif/video) with

@@ -8,7 +8,7 @@ import "root:/services" as Services
 Singleton {
     id: root
 
-    readonly property string historyPath: "/home/adolf/.local/state/ashen/notifications.json"
+    readonly property string historyPath: (Quickshell.env("HOME") || "/home/adolf") + "/.local/state/ashen/notifications.json"
 
     property var history: []
     property var activePopups: []
@@ -105,7 +105,7 @@ Singleton {
     function saveHistory() {
         let json = JSON.stringify(root.history)
         let b64 = Qt.btoa(json)
-        saveProc.command = ["sh", "-c", "mkdir -p /home/adolf/.local/state/ashen && echo '" + b64 + "' | base64 -d > " + root.historyPath]
+        saveProc.command = ["sh", "-c", "mkdir -p \"$HOME\"/.local/state/ashen && echo '" + b64 + "' | base64 -d > " + root.historyPath]
         saveProc.running = true
     }
 

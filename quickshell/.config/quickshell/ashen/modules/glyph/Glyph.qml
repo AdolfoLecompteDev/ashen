@@ -46,7 +46,7 @@ Scope {
 
         Process {
             id: nerdFontLoader
-            command: ["sh", "-c", "cat /home/adolf/ashen/quickshell/.config/quickshell/ashen/modules/glyph/data/nerd_font_icons.txt"]
+            command: ["sh", "-c", "cat \"$HOME\"/.config/quickshell/ashen/modules/glyph/data/nerd_font_icons.txt"]
             running: false
             stdout: StdioCollector {
                 onStreamFinished: {
@@ -63,7 +63,7 @@ Scope {
 
         Process {
             id: materialLoader
-            command: ["sh", "-c", "cat /home/adolf/ashen/quickshell/.config/quickshell/ashen/modules/glyph/data/material_symbols.txt"]
+            command: ["sh", "-c", "cat \"$HOME\"/.config/quickshell/ashen/modules/glyph/data/material_symbols.txt"]
             running: false
             stdout: StdioCollector {
                 onStreamFinished: {

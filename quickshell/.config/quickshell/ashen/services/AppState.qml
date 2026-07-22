@@ -10,7 +10,7 @@ Singleton {
 
     Process {
         id: recordingCheckProc
-        command: ["sh", "-c", "PID=$(cat /home/adolf/.cache/ashen_recording.pid 2>/dev/null); if [ -n \"$PID\" ] && kill -0 \"$PID\" 2>/dev/null; then cat /home/adolf/.cache/ashen_recording_start 2>/dev/null; else rm -f /home/adolf/.cache/ashen_recording.pid /home/adolf/.cache/ashen_recording_start; fi"]
+        command: ["sh", "-c", "PID=$(cat \"$HOME\"/.cache/ashen_recording.pid 2>/dev/null); if [ -n \"$PID\" ] && kill -0 \"$PID\" 2>/dev/null; then cat \"$HOME\"/.cache/ashen_recording_start 2>/dev/null; else rm -f \"$HOME\"/.cache/ashen_recording.pid \"$HOME\"/.cache/ashen_recording_start; fi"]
         running: false
         stdout: StdioCollector {
             onStreamFinished: {
@@ -29,16 +29,16 @@ Singleton {
     // shell restart picks an ongoing recording back up (recordingCheckProc).
     function startRecording() {
         let startMs = Date.now()
-        let path = "/home/adolf/Videos/ashen_" + startMs + ".mp4"
+        let path = (Quickshell.env("HOME") || "/home/adolf") + "/Videos/ashen_" + startMs + ".mp4"
         Quickshell.execDetached(["sh", "-c",
-            "mkdir -p /home/adolf/Videos; wf-recorder --audio=\"$(pactl get-default-sink).monitor\" -c libx264 -x yuv420p -p color_range=tv -p colorspace=bt709 -p color_primaries=bt709 -p color_trc=bt709 -f '" + path + "' & echo $! > /home/adolf/.cache/ashen_recording.pid; echo " + startMs + " > /home/adolf/.cache/ashen_recording_start"
+            "mkdir -p \"$HOME\"/Videos; wf-recorder --audio=\"$(pactl get-default-sink).monitor\" -c libx264 -x yuv420p -p color_range=tv -p colorspace=bt709 -p color_primaries=bt709 -p color_trc=bt709 -f '" + path + "' & echo $! > \"$HOME\"/.cache/ashen_recording.pid; echo " + startMs + " > \"$HOME\"/.cache/ashen_recording_start"
         ])
         root.recording = true
         root.recordingStartTime = startMs
     }
     function stopRecording() {
         Quickshell.execDetached(["sh", "-c",
-            "PID=$(cat /home/adolf/.cache/ashen_recording.pid 2>/dev/null); [ -n \"$PID\" ] && kill -INT \"$PID\"; rm -f /home/adolf/.cache/ashen_recording.pid /home/adolf/.cache/ashen_recording_start"
+            "PID=$(cat \"$HOME\"/.cache/ashen_recording.pid 2>/dev/null); [ -n \"$PID\" ] && kill -INT \"$PID\"; rm -f \"$HOME\"/.cache/ashen_recording.pid \"$HOME\"/.cache/ashen_recording_start"
         ])
         root.recording = false
     }

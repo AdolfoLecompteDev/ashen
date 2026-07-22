@@ -29,7 +29,7 @@ Singleton {
     //    Services.Colors.* updates itself -- no quickshell restart needed.
     FileView {
         id: schemeFile
-        path: "/home/adolf/.cache/ashen_scheme.json"
+        path: (Quickshell.env("HOME") || "/home/adolf") + "/.cache/ashen_scheme.json"
         watchChanges: true
         onFileChanged: reload()
         onLoaded: {

@@ -5,19 +5,19 @@ command = "true"
 set = false
 [templates.ashen_colors]
 input_path = "~/.config/matugen/templates/scheme.json.template"
-output_path = "/home/adolf/.cache/ashen_scheme.json"
+output_path = "~/.cache/ashen_scheme.json"
 [templates.gtk3]
 input_path = "~/.config/matugen/templates/gtk3.css"
-output_path = "/home/adolf/.config/gtk-3.0/gtk.css"
+output_path = "~/.config/gtk-3.0/gtk.css"
 [templates.gtk4]
 input_path = "~/.config/matugen/templates/gtk4.css"
-output_path = "/home/adolf/.config/gtk-4.0/gtk.css"
+output_path = "~/.config/gtk-4.0/gtk.css"
 [templates.kitty]
 input_path = "~/.config/matugen/templates/kitty-colors.conf"
-output_path = "/home/adolf/.config/kitty/ashen-colors.conf"
+output_path = "~/.config/kitty/ashen-colors.conf"
 # Live-reload every open kitty from the file just written, so fastfetch/prompt
 # repaint without a restart. kitty appends -<pid> to the listen socket.
-post_hook = "sh -c 'for s in /tmp/kitty-ashen.sock-*; do [ -S \"$s\" ] && kitten @ --to \"unix:$s\" set-colors --all --configured /home/adolf/.config/kitty/ashen-colors.conf 2>/dev/null; done; true'"
+post_hook = "sh -c 'for s in /tmp/kitty-ashen.sock-*; do [ -S \"$s\" ] && kitten @ --to \"unix:$s\" set-colors --all --configured \"$HOME/.config/kitty/ashen-colors.conf\" 2>/dev/null; done; true'"
 
 # Only writes the accent hex to the cache; the border is applied to Hyprland by
 # scripts/ashen-apply-border.sh (called from the wallpaper/recolor scripts),
@@ -25,4 +25,4 @@ post_hook = "sh -c 'for s in /tmp/kitty-ashen.sock-*; do [ -S \"$s\" ] && kitten
 # HYPRLAND_INSTANCE_SIGNATURE — where hyprctl fails and aborts the hook.
 [templates.hypr_border]
 input_path = "~/.config/matugen/templates/border_color.template"
-output_path = "/home/adolf/.cache/matugen_border_color.txt"
+output_path = "~/.cache/matugen_border_color.txt"

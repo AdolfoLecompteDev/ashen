@@ -21,10 +21,10 @@ Singleton {
 
     function refresh() { devProc.running = true }
 
-    // env, not a literal: the installer's /home/adolf -> $HOME rewrite only runs
-    // on a fresh install, so a hardcoded path breaks anyone who just pulls.
+    // Resolved from $HOME at runtime, and via the stowed config location rather
+    // than the repo path, so it holds no matter where the repo was cloned.
     readonly property string inputConf:
-        (Quickshell.env("HOME") || "") + "/ashen/hypr/.config/hypr/conf/input.lua"
+        (Quickshell.env("HOME") || "") + "/.config/hypr/conf/input.lua"
 
     // XKB only has 4 groups. Hyprland will happily accept and echo back a 5th
     // layout, but switchxkblayout answers "layout idx out of range of 4", so it

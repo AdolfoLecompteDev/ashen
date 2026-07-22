@@ -62,7 +62,7 @@ hl.bind(mod .. " + O", hl.dsp.workspace.toggle_special("notes"))
 hl.bind(mod .. " + X", hl.dsp.workspace.toggle_special("fav"))
 
 -- System
-hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd("sh -c 'DEFAULT_TARGET_DIR=/home/adolf/Pictures/Screenshots grimblast copysave area && qs ipc -c ashen call notifications screenshot'"))
+hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd("sh -c 'DEFAULT_TARGET_DIR=\"$HOME/Pictures/Screenshots\" grimblast copysave area && qs ipc -c ashen call notifications screenshot'"))
 hl.bind(mod .. " + L",         hl.dsp.exec_cmd("qs ipc -c ashen call lockscreen lock"))
 hl.bind(mod .. " + Escape",    hl.dsp.exec_cmd("qs ipc -c ashen call power toggle"))
 

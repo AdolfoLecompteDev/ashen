@@ -154,14 +154,11 @@ say "Creating XDG folders..."
 mkdir -p "$HOME/Pictures/Wallpapers" "$HOME/Pictures/Screenshots" "$HOME/Videos"
 
 # ── 3. Portability ────────────────────────────────────────────────────────
-# The repo was written on /home/adolf; point every hardcoded path at this $HOME.
-if [[ "$HOME" != "/home/adolf" ]]; then
-    say "Rewriting hardcoded paths for this machine ($HOME)..."
-    grep -rl "/home/adolf" "$REPO_DIR" \
-        --include="*.qml" --include="*.lua" --include="*.sh" \
-        --include="*.txt" --include="*.jsonc" --include="*.conf" --include="*.toml" 2>/dev/null \
-        | xargs -r sed -i "s|/home/adolf|$HOME|g"
-fi
+# Nothing to rewrite: every path is resolved at runtime from the user's home
+# (QML via Quickshell.env("HOME"), shell commands via "$HOME", the hypr/matugen
+# configs via "$HOME"/"~"). The repo therefore stays clean after `git pull` on
+# any machine -- no sed rewriting the working tree. If you find a literal
+# /home/adolf sneaking back in, that is the bug: make it $HOME-relative instead.
 
 # ── 4. Stow ───────────────────────────────────────────────────────────────
 # `scripts` is NOT stowed: the shell calls it by absolute path from ~/ashen.
